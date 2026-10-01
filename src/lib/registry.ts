@@ -41,8 +41,9 @@ export const registry: GalleryItem[] = [
       "Pause and resume by tapping the orb, plus a Reset button",
       "SVG progress arc with a glowing spark and 60 ticks that light up",
       "Color shifts from indigo to magenta to amber as the session progresses",
-      "Confetti burst and a Sessions today counter when a session completes",
+      "Confetti burst when a session completes, and a Sessions today counter that is saved in the browser: it survives reloads and starts again at 0 each new day",
       "Countdown is computed from a wall-clock deadline, so it stays accurate in background tabs",
+      "Fully responsive: fills small screens up to 340px wide and scales the timer down below 380px, with no horizontal overflow",
     ],
     howToUse: [
       "Choose 5, 15 or 25 min.",
@@ -70,6 +71,8 @@ export const registry: GalleryItem[] = [
       "Animated completion ring with percentage and x/7 days",
       "Best run this week, a motivating message, and the glow turns gold at 7/7",
       "Progress and habit name are saved in localStorage",
+      "Uses the viewer's local timezone: the week runs Monday to Sunday on their own clock and resets at their local midnight, even if the page stays open",
+      "Fully responsive: fills small screens up to 320px wide with no horizontal overflow",
     ],
     howToUse: [
       "Click the habit title to rename it.",

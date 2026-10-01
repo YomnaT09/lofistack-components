@@ -12,6 +12,26 @@ const CONFETTI = Array.from({ length: 28 }, (_, i) => {
   return { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, hue: (i * 47) % 360, size: 6 + (i % 3) * 3, round: i % 2 === 0 };
 });
 
+// "Sessions today" is kept per local calendar day: it survives reloads and starts again at 0 each new day.
+const STORE = "focus-timer-button:v1";
+const dayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const loadSessions = () => {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE) ?? "null");
+    return s && s.day === dayKey() && Number.isFinite(s.sessions) ? s.sessions : 0;
+  } catch {
+    return 0;
+  }
+};
+const saveSessions = (n: number) => {
+  try {
+    localStorage.setItem(STORE, JSON.stringify({ day: dayKey(), sessions: n }));
+  } catch {}
+};
+
 type Status = "idle" | "running" | "paused" | "done";
 
 const fmt = (s: number) =>
@@ -27,6 +47,19 @@ export default function FocusTimerButton() {
 
   const total = minutes * 60;
 
+  // Read the saved count after mount (avoids a server/client mismatch) and keep it fresh
+  // when the tab regains focus (e.g. after midnight) or another tab finishes a session.
+  useEffect(() => {
+    const sync = () => setSessions(loadSessions());
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      document.removeEventListener("visibilitychange", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
   // Tick from a wall-clock deadline so the countdown stays correct if the tab is throttled.
   useEffect(() => {
     if (status !== "running") return;
@@ -35,7 +68,9 @@ export default function FocusTimerButton() {
       setLeft(remaining);
       if (remaining === 0) {
         setStatus("done");
-        setSessions((n) => n + 1);
+        const n = loadSessions() + 1;
+        saveSessions(n);
+        setSessions(n);
       }
     }, 250);
     return () => clearInterval(id);
@@ -48,6 +83,10 @@ export default function FocusTimerButton() {
   const reset = () => {
     setStatus("idle");
     setLeft(total);
+  };
+  const clearSessions = () => {
+    saveSessions(0);
+    setSessions(0);
   };
   const pick = (m: number) => {
     setMinutes(m);
@@ -76,7 +115,7 @@ export default function FocusTimerButton() {
   const hy = 120 + Math.sin(headAngle) * RING;
 
   return (
-    <div style={{ fontFamily: "var(--font-lexend)" }} className="relative w-[340px] select-none overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 px-6 pb-5 pt-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+    <div style={{ fontFamily: "var(--font-lexend)" }} className="relative w-full max-w-[340px] select-none overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 px-4 pb-5 pt-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
       <style>{`
         @keyframes ft-drift-a { 0%,100% { transform: translate(0,0) } 50% { transform: translate(60px,40px) } }
         @keyframes ft-drift-b { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-50px,-30px) } }
@@ -110,7 +149,7 @@ export default function FocusTimerButton() {
           {status === "running" ? "In the zone" : done ? "Session complete" : status === "paused" ? "Paused" : "Ready to focus"}
         </div>
 
-        <div className="flex gap-2" aria-label="Session length">
+        <div className="flex flex-wrap justify-center gap-2" aria-label="Session length">
           {PRESETS.map((m) => (
             <button
               key={m}
@@ -127,7 +166,7 @@ export default function FocusTimerButton() {
           ))}
         </div>
 
-        <div className="relative flex h-[250px] w-full items-center justify-center">
+        <div className="relative flex h-[215px] w-full items-center justify-center max-[379px]:scale-[0.85] min-[380px]:h-[250px]">
           {/* outer rotating glow that wakes up when the timer runs */}
           <div
             aria-hidden
@@ -281,6 +320,11 @@ export default function FocusTimerButton() {
         <div className="flex h-8 w-full items-center justify-between text-xs text-white/55">
           <span>
             Sessions today <b className="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-white">{sessions}</b>
+            {sessions > 0 && idle && (
+              <button onClick={clearSessions} className="ml-2 text-[11px] text-white/40 underline-offset-2 hover:text-white/80 hover:underline">
+                clear
+              </button>
+            )}
           </span>
           {!idle && (
             <button onClick={reset} className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white/80 transition hover:bg-white/20">

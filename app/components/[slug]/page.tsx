@@ -38,7 +38,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
   ];
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <Link href="/" className="text-sm text-white/50 transition hover:text-white">
         ← All components
       </Link>
@@ -52,7 +52,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
       </div>
       <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white/65">{summary}</p>
 
-      <div className="relative mt-8 flex min-h-[460px] items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(ellipse_at_top,#2a2468_0%,#0b0b1c_60%)] p-8">
+      <div className="relative mt-8 flex min-h-[420px] sm:min-h-[460px] items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(ellipse_at_top,#2a2468_0%,#0b0b1c_60%)] p-3 sm:p-8">
         <div
           aria-hidden
           className="absolute inset-0 opacity-30"
