@@ -65,7 +65,7 @@ export default function HabitStreakCard() {
       : `${7 - count} more day${7 - count > 1 ? "s" : ""} for a perfect week.`;
 
   return (
-    <div style={{ fontFamily: "var(--font-verdana)" }} className="relative w-[320px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 p-6 shadow-[0_30px_70px_-20px_rgba(0,0,0,.9)]">
+    <div style={{ fontFamily: "var(--font-lexend)" }} className="relative w-[320px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 p-6 shadow-[0_30px_70px_-20px_rgba(0,0,0,.9)]">
       <style>{`
         @keyframes hs-flame { 0%,100% { transform: scale(1) rotate(-3deg) } 50% { transform: scale(1.18) rotate(4deg) } }
         @keyframes hs-pop { 0% { transform: scale(.7) } 60% { transform: scale(1.18) } 100% { transform: scale(1) } }

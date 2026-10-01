@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import localFont from "next/font/local";
 import "./globals.css";
+
+// Lexend (SIL Open Font License, see src/fonts/OFL.txt). Used by the gallery components.
+const lexend = localFont({
+  src: "../src/fonts/Lexend-Variable.ttf",
+  variable: "--font-lexend",
+  weight: "100 900",
+  fallback: ["system-ui", "sans-serif"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "LofiStack Component Gallery",
@@ -9,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={lexend.variable}>
       <body className="min-h-screen antialiased">
         <header className="border-b border-white/10">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
