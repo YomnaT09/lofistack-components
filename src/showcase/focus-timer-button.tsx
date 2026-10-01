@@ -76,7 +76,7 @@ export default function FocusTimerButton() {
   const hy = 120 + Math.sin(headAngle) * RING;
 
   return (
-    <div className="relative w-[340px] select-none overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 px-6 pb-5 pt-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+    <div style={{ fontFamily: "var(--font-verdana)" }} className="relative w-[340px] select-none overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 px-6 pb-5 pt-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
       <style>{`
         @keyframes ft-drift-a { 0%,100% { transform: translate(0,0) } 50% { transform: translate(60px,40px) } }
         @keyframes ft-drift-b { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-50px,-30px) } }
