@@ -29,7 +29,7 @@ export default function Home() {
 
       <section className="relative mx-auto max-w-6xl px-6 pb-20 pt-8">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {registry.map(({ slug, name, type, week, description, Component, previewScale }) => (
+          {registry.map(({ slug, name, type, week, description, Component, previewScale, previewProps }) => (
             <Link
               key={slug}
               href={`/components/${slug}`}
@@ -37,7 +37,7 @@ export default function Home() {
             >
               <div className="pointer-events-none flex h-52 items-center justify-center overflow-hidden rounded-xl bg-[radial-gradient(ellipse_at_top,#2a2468_0%,#0b0b1c_70%)]">
                 <div style={{ transform: `scale(${previewScale ?? 0.6})` }}>
-                  <Component />
+                  <Component {...previewProps} />
                 </div>
               </div>
               <div className="mt-4 flex items-center justify-between gap-2">

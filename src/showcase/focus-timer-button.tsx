@@ -2,7 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const PRESETS = [5, 15, 25];
+export interface FocusTimerButtonProps {
+  /** Session lengths (in minutes) shown as chips. */
+  presets?: number[];
+  /** Which preset is selected first. Must be one of `presets`. */
+  defaultMinutes?: number;
+  /** Text on the idle button. */
+  startLabel?: string;
+  /** Text shown in the orb when a session ends. */
+  doneLabel?: string;
+  /** Label for the sessions counter. */
+  sessionsLabel?: string;
+  /** Starting hue (0-360) of the ring; it shifts +140 as the session progresses. */
+  accentHue?: number;
+  /** Keep the daily sessions count in localStorage. */
+  persist?: boolean;
+  /** localStorage key used when `persist` is true. */
+  storageKey?: string;
+  /** Disable all controls. */
+  disabled?: boolean;
+  /** Show a spinner on the button and disable it. */
+  loading?: boolean;
+  onStart?: (minutes: number) => void;
+  onPause?: (secondsLeft: number) => void;
+  onComplete?: (sessionsToday: number) => void;
+  onReset?: () => void;
+  className?: string;
+}
+
+const DEFAULT_PRESETS = [5, 15, 25];
 const RING = 100; // arc radius inside the 240px svg
 const CIRC = 2 * Math.PI * RING;
 const TICKS = 60;
@@ -13,22 +41,22 @@ const CONFETTI = Array.from({ length: 28 }, (_, i) => {
 });
 
 // "Sessions today" is kept per local calendar day: it survives reloads and starts again at 0 each new day.
-const STORE = "focus-timer-button:v1";
+const DEFAULT_STORE = "focus-timer-button:v1";
 const dayKey = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-const loadSessions = () => {
+const loadSessions = (store: string) => {
   try {
-    const s = JSON.parse(localStorage.getItem(STORE) ?? "null");
+    const s = JSON.parse(localStorage.getItem(store) ?? "null");
     return s && s.day === dayKey() && Number.isFinite(s.sessions) ? s.sessions : 0;
   } catch {
     return 0;
   }
 };
-const saveSessions = (n: number) => {
+const saveSessions = (store: string, n: number) => {
   try {
-    localStorage.setItem(STORE, JSON.stringify({ day: dayKey(), sessions: n }));
+    localStorage.setItem(store, JSON.stringify({ day: dayKey(), sessions: n }));
   } catch {}
 };
 
@@ -37,11 +65,29 @@ type Status = "idle" | "running" | "paused" | "done";
 const fmt = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-export default function FocusTimerButton() {
-  const [minutes, setMinutes] = useState(25);
+export default function FocusTimerButton({
+  presets = DEFAULT_PRESETS,
+  defaultMinutes = 25,
+  startLabel = "Start focus",
+  doneLabel = "Done!",
+  sessionsLabel = "Sessions today",
+  accentHue = 250,
+  persist = true,
+  storageKey = DEFAULT_STORE,
+  disabled = false,
+  loading = false,
+  onStart,
+  onPause,
+  onComplete,
+  onReset,
+  className = "",
+}: FocusTimerButtonProps) {
+  const [minutes, setMinutes] = useState(defaultMinutes);
   const [status, setStatus] = useState<Status>("idle");
-  const [left, setLeft] = useState(25 * 60);
+  const [left, setLeft] = useState(defaultMinutes * 60);
   const [sessions, setSessions] = useState(0);
+  const sessionsRef = useRef(0);
+  const locked = disabled || loading;
   const [ripple, setRipple] = useState(0);
   const endsAt = useRef(0);
 
@@ -50,7 +96,12 @@ export default function FocusTimerButton() {
   // Read the saved count after mount (avoids a server/client mismatch) and keep it fresh
   // when the tab regains focus (e.g. after midnight) or another tab finishes a session.
   useEffect(() => {
-    const sync = () => setSessions(loadSessions());
+    if (!persist) return;
+    const sync = () => {
+      const n = loadSessions(storageKey);
+      sessionsRef.current = n;
+      setSessions(n);
+    };
     sync();
     document.addEventListener("visibilitychange", sync);
     window.addEventListener("storage", sync);
@@ -58,7 +109,7 @@ export default function FocusTimerButton() {
       document.removeEventListener("visibilitychange", sync);
       window.removeEventListener("storage", sync);
     };
-  }, []);
+  }, [persist, storageKey]);
 
   // Tick from a wall-clock deadline so the countdown stays correct if the tab is throttled.
   useEffect(() => {
@@ -68,24 +119,30 @@ export default function FocusTimerButton() {
       setLeft(remaining);
       if (remaining === 0) {
         setStatus("done");
-        const n = loadSessions() + 1;
-        saveSessions(n);
+        const n = (persist ? loadSessions(storageKey) : sessionsRef.current) + 1;
+        if (persist) saveSessions(storageKey, n);
+        sessionsRef.current = n;
         setSessions(n);
+        onComplete?.(n);
       }
     }, 250);
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   const start = () => {
     endsAt.current = Date.now() + left * 1000;
     setStatus("running");
+    onStart?.(minutes);
   };
   const reset = () => {
     setStatus("idle");
     setLeft(total);
+    onReset?.();
   };
   const clearSessions = () => {
-    saveSessions(0);
+    if (persist) saveSessions(storageKey, 0);
+    sessionsRef.current = 0;
     setSessions(0);
   };
   const pick = (m: number) => {
@@ -94,8 +151,12 @@ export default function FocusTimerButton() {
     setStatus("idle");
   };
   const onMain = () => {
+    if (locked) return;
     setRipple((r) => r + 1);
-    if (status === "running") setStatus("paused");
+    if (status === "running") {
+      setStatus("paused");
+      onPause?.(left);
+    }
     else if (status === "done") reset();
     else start();
   };
@@ -105,7 +166,7 @@ export default function FocusTimerButton() {
   const progress = done ? 1 : total === 0 ? 0 : 1 - left / total;
 
   // Colour travels indigo -> magenta -> amber as the session progresses.
-  const hue = 250 + progress * 140;
+  const hue = accentHue + progress * 140;
   const c1 = `hsl(${hue} 95% 62%)`;
   const c2 = `hsl(${hue + 55} 95% 66%)`;
   const glow = `hsl(${hue} 95% 60%)`;
@@ -115,8 +176,9 @@ export default function FocusTimerButton() {
   const hy = 120 + Math.sin(headAngle) * RING;
 
   return (
-    <div style={{ fontFamily: "var(--font-lexend)" }} className="relative w-full max-w-[340px] select-none overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 px-4 pb-5 pt-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
+    <div style={{ fontFamily: "var(--font-lexend)" }} className={`${className} ft-root relative w-full max-w-[340px] select-none overflow-hidden rounded-[2rem] border border-white/15 bg-slate-950/80 px-4 pb-5 pt-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]`}>
       <style>{`
+        @media (prefers-reduced-motion: reduce) { .ft-root *, .ft-root *::before { animation: none !important; transition-duration: 1ms !important; } }
         @keyframes ft-drift-a { 0%,100% { transform: translate(0,0) } 50% { transform: translate(60px,40px) } }
         @keyframes ft-drift-b { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-50px,-30px) } }
         @keyframes ft-spin { to { transform: rotate(360deg) } }
@@ -127,6 +189,10 @@ export default function FocusTimerButton() {
         @keyframes ft-ripple { 0% { transform: scale(.6); opacity: .7 } 100% { transform: scale(1.9); opacity: 0 } }
         @keyframes ft-fade { from { opacity: 0; transform: scale(.85) } to { opacity: 1; transform: scale(1) } }
       `}</style>
+
+      <p role="status" aria-live="polite" className="sr-only">
+        {status === "running" ? "Focus session running" : status === "paused" ? "Paused" : done ? "Session complete" : ""}
+      </p>
 
       {/* aurora background */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -141,7 +207,7 @@ export default function FocusTimerButton() {
       </div>
 
       <div className="relative flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.25em] text-white/60">
+        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.25em] text-white/75">
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ background: status === "running" ? "#4ade80" : "rgba(255,255,255,.35)", boxShadow: status === "running" ? "0 0 10px #4ade80" : "none" }}
@@ -150,12 +216,12 @@ export default function FocusTimerButton() {
         </div>
 
         <div className="flex flex-wrap justify-center gap-2" aria-label="Session length">
-          {PRESETS.map((m) => (
+          {presets.map((m) => (
             <button
               key={m}
               onClick={() => pick(m)}
-              disabled={status === "running"}
-              className={`rounded-full border px-3.5 py-1 text-xs backdrop-blur transition disabled:opacity-40 ${
+              disabled={status === "running" || locked}
+              className={`rounded-full border px-3.5 py-1 text-xs backdrop-blur transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-not-allowed disabled:opacity-40 ${
                 minutes === m
                   ? "border-white bg-white text-slate-900"
                   : "border-white/15 bg-white/10 text-white/75 hover:bg-white/20"
@@ -242,8 +308,10 @@ export default function FocusTimerButton() {
           {/* the button: pill when idle, orb when running */}
           <button
             onClick={onMain}
+            disabled={locked}
+            aria-busy={loading}
             aria-label={status === "running" ? "Pause focus timer" : done ? "Start another session" : "Start focus timer"}
-            className="relative flex items-center justify-center overflow-hidden border border-white/20 text-white transition-all duration-700 ease-[cubic-bezier(.34,1.3,.64,1)] active:scale-95"
+            className="relative flex items-center justify-center overflow-hidden border border-white/20 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 transition-all duration-700 ease-[cubic-bezier(.34,1.3,.64,1)] active:scale-95"
             style={{
               width: idle ? 200 : 168,
               height: idle ? 60 : 168,
@@ -274,12 +342,17 @@ export default function FocusTimerButton() {
             <span className="relative">
               {idle ? (
                 <span className="flex items-center gap-2 text-[15px] font-semibold tracking-wide">
-                  <span aria-hidden>▶</span> Start focus
+                  {loading ? (
+                    <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  ) : (
+                    <span aria-hidden>▶</span>
+                  )}
+                  {loading ? "Loading…" : startLabel}
                 </span>
               ) : done ? (
                 <span className="flex flex-col items-center leading-tight">
-                  <span className="text-2xl font-semibold">Done!</span>
-                  <span className="text-[10px] uppercase tracking-widest text-white/60">tap to go again</span>
+                  <span className="text-2xl font-semibold">{doneLabel}</span>
+                  <span className="text-[10px] uppercase tracking-widest text-white/75">tap to go again</span>
                 </span>
               ) : (
                 <span className="flex flex-col items-center leading-tight">
@@ -289,7 +362,7 @@ export default function FocusTimerButton() {
                   >
                     {fmt(left)}
                   </span>
-                  <span className="mt-1 text-[10px] uppercase tracking-[0.3em] text-white/60">
+                  <span className="mt-1 text-[10px] uppercase tracking-[0.3em] text-white/75">
                     {status === "paused" ? "tap to resume" : "tap to pause"}
                   </span>
                 </span>
@@ -317,17 +390,17 @@ export default function FocusTimerButton() {
             ))}
         </div>
 
-        <div className="flex h-8 w-full items-center justify-between text-xs text-white/55">
+        <div className="flex h-8 w-full items-center justify-between text-xs text-white/75">
           <span>
-            Sessions today <b className="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-white">{sessions}</b>
-            {sessions > 0 && idle && (
-              <button onClick={clearSessions} className="ml-2 text-[11px] text-white/40 underline-offset-2 hover:text-white/80 hover:underline">
+            {sessionsLabel} <b className="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-white">{sessions}</b>
+            {sessions > 0 && idle && !locked && (
+              <button onClick={clearSessions} className="ml-2 text-[11px] text-white/70 underline underline-offset-2 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-300">
                 clear
               </button>
             )}
           </span>
           {!idle && (
-            <button onClick={reset} className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white/80 transition hover:bg-white/20">
+            <button onClick={reset} disabled={disabled} className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white/90 transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:opacity-40">
               Reset
             </button>
           )}

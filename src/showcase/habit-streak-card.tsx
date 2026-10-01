@@ -2,8 +2,42 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-const KEY = "habit-streak-card:v1";
+export interface HabitState {
+  habit: string;
+  /** Seven booleans, Monday first. */
+  done: boolean[];
+  streak: number;
+}
+
+export interface HabitStreakCardProps {
+  /** Habit name shown (and editable) at the top. */
+  habit?: string;
+  /** Small caption above the habit name. */
+  title?: string;
+  /** Seven short labels for the day buttons, Monday first. */
+  dayLabels?: string[];
+  /** Which days start ticked, Monday first. Ignored once progress is saved. */
+  defaultDone?: boolean[];
+  /** Let people rename the habit. */
+  editable?: boolean;
+  /** Text of the reset button. */
+  resetLabel?: string;
+  /** Keep progress in localStorage. */
+  persist?: boolean;
+  /** localStorage key used when `persist` is true. */
+  storageKey?: string;
+  /** Disable every control. */
+  disabled?: boolean;
+  /** Show a skeleton and disable the card, e.g. while data loads. */
+  loading?: boolean;
+  /** Called whenever the habit name or ticks change. */
+  onChange?: (state: HabitState) => void;
+  className?: string;
+}
+
+const DEFAULT_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DEFAULT_KEY = "habit-streak-card:v1";
 const R = 44;
 const CIRC = 2 * Math.PI * R;
 
@@ -19,9 +53,23 @@ const weekStart = (d: Date) => {
 };
 const EMPTY = [false, false, false, false, false, false, false];
 
-export default function HabitStreakCard() {
-  const [habit, setHabit] = useState("Deep work, 2 hours");
-  const [done, setDone] = useState<boolean[]>([true, true, false, false, false, false, false]);
+export default function HabitStreakCard({
+  habit: initialHabit = "Deep work, 2 hours",
+  title = "This week's habit",
+  dayLabels = DEFAULT_LABELS,
+  defaultDone = EMPTY,
+  editable = true,
+  resetLabel = "Reset week",
+  persist = true,
+  storageKey = DEFAULT_KEY,
+  disabled = false,
+  loading = false,
+  onChange,
+  className = "",
+}: HabitStreakCardProps) {
+  const locked = disabled || loading;
+  const [habit, setHabit] = useState(initialHabit);
+  const [done, setDone] = useState<boolean[]>(defaultDone);
   const [today, setToday] = useState(-1); // set after mount to avoid a server/client mismatch
   const [week, setWeek] = useState(""); // local Monday of the week the ticks belong to
   const [loaded, setLoaded] = useState(false);
@@ -36,12 +84,14 @@ export default function HabitStreakCard() {
     weekRef.current = thisWeek;
     setWeek(thisWeek);
     try {
-      const saved = JSON.parse(localStorage.getItem(KEY) ?? "null");
+      if (!persist) throw new Error("persist off");
+      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
       if (saved && typeof saved.habit === "string") setHabit(saved.habit);
       if (saved?.done?.length === 7) setDone(saved.week === thisWeek ? saved.done : saved.week ? EMPTY : saved.done);
     } catch {}
     setLoaded(true);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persist, storageKey]);
 
   // Keep "today" and the week correct while the page stays open across local midnight.
   useEffect(() => {
@@ -62,11 +112,11 @@ export default function HabitStreakCard() {
   }, []);
 
   useEffect(() => {
-    if (!loaded || !week) return;
+    if (!persist || !loaded || !week) return;
     try {
-      localStorage.setItem(KEY, JSON.stringify({ done, habit, week }));
+      localStorage.setItem(storageKey, JSON.stringify({ done, habit, week }));
     } catch {}
-  }, [done, habit, week, loaded]);
+  }, [done, habit, week, loaded, persist, storageKey]);
 
   const count = done.filter(Boolean).length;
   const pct = count / 7;
@@ -92,6 +142,12 @@ export default function HabitStreakCard() {
     setBump((b) => b + 1);
   };
 
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  useEffect(() => {
+    if (loaded) onChangeRef.current?.({ habit, done, streak });
+  }, [loaded, habit, done, streak]);
+
   const perfect = count === 7;
   const msg = perfect
     ? "Perfect week. Unstoppable."
@@ -100,8 +156,9 @@ export default function HabitStreakCard() {
       : `${7 - count} more day${7 - count > 1 ? "s" : ""} for a perfect week.`;
 
   return (
-    <div style={{ fontFamily: "var(--font-lexend)" }} className="relative w-full max-w-[320px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 p-5 shadow-[0_30px_70px_-20px_rgba(0,0,0,.9)] sm:p-6">
+    <div style={{ fontFamily: "var(--font-lexend)" }} aria-busy={loading} className={`${className} hs-root relative w-full max-w-[320px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 p-5 shadow-[0_30px_70px_-20px_rgba(0,0,0,.9)] sm:p-6 ${loading ? "animate-pulse" : ""}`}>
       <style>{`
+        @media (prefers-reduced-motion: reduce) { .hs-root *, .hs-root { animation: none !important; transition-duration: 1ms !important; } }
         @keyframes hs-flame { 0%,100% { transform: scale(1) rotate(-3deg) } 50% { transform: scale(1.18) rotate(4deg) } }
         @keyframes hs-pop { 0% { transform: scale(.7) } 60% { transform: scale(1.18) } 100% { transform: scale(1) } }
         @keyframes hs-shine { 0% { transform: translateX(-150%) } 100% { transform: translateX(350%) } }
@@ -114,13 +171,15 @@ export default function HabitStreakCard() {
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/45">This week&apos;s habit</p>
+          <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/70">{title}</p>
           <input
             value={habit}
             onChange={(e) => setHabit(e.target.value)}
             maxLength={28}
+            readOnly={!editable}
+            disabled={locked}
             aria-label="Habit name"
-            className="mt-1 w-full rounded bg-transparent text-base font-semibold sm:text-lg text-white outline-none focus:bg-white/5"
+            className="mt-1 w-full rounded bg-transparent text-base font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-60 sm:text-lg"
           />
         </div>
         <div className="flex items-center gap-1 rounded-full bg-orange-500/15 px-3 py-1.5 text-orange-300">
@@ -151,19 +210,19 @@ export default function HabitStreakCard() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-bold tabular-nums text-white">{Math.round(pct * 100)}%</span>
-            <span className="text-[10px] uppercase tracking-widest text-white/45">{count}/7 days</span>
+            <span className="text-[10px] uppercase tracking-widest text-white/70">{count}/7 days</span>
           </div>
         </div>
 
         <div className="space-y-3 text-sm">
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/45">Current streak</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/70">Current streak</p>
             <p className="font-semibold text-white">
               {streak} day{streak === 1 ? "" : "s"}
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-white/45">Best this week</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/70">Best this week</p>
             <p className="font-semibold text-white">
               {best} day{best === 1 ? "" : "s"}
             </p>
@@ -172,19 +231,20 @@ export default function HabitStreakCard() {
       </div>
 
       <div className="relative mt-6 grid grid-cols-7 gap-1.5">
-        {DAYS.map((d, idx) => {
+        {dayLabels.slice(0, 7).map((d, idx) => {
           const on = done[idx];
           const isToday = idx === today;
           return (
             <button
               key={idx}
               onClick={() => toggle(idx)}
+              disabled={locked}
               aria-pressed={on}
-              aria-label={`Day ${idx + 1}${isToday ? " (today)" : ""}: ${on ? "done" : "not done"}`}
-              className={`flex aspect-square flex-col items-center justify-center rounded-xl text-xs font-semibold transition active:scale-90 ${
+              aria-label={`${WEEKDAYS[idx]}${isToday ? " (today)" : ""}: ${on ? "done" : "not done"}`}
+              className={`flex aspect-square flex-col items-center justify-center rounded-xl text-xs font-semibold transition active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-not-allowed disabled:opacity-50 ${
                 on
                   ? "bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white shadow-lg shadow-indigo-900/50"
-                  : "bg-white/10 text-white/50 hover:bg-white/20"
+                  : "bg-white/10 text-white/75 hover:bg-white/20"
               } ${isToday ? "ring-2 ring-white/70 ring-offset-2 ring-offset-slate-950" : ""}`}
             >
               <span>{d}</span>
@@ -194,14 +254,15 @@ export default function HabitStreakCard() {
         })}
       </div>
 
-      <p className="relative mt-4 text-center text-xs text-white/55">{msg}</p>
+      <p className="relative mt-4 text-center text-xs text-white/75">{msg}</p>
 
       <div className="relative mt-3 flex justify-center">
         <button
           onClick={() => setDone(EMPTY)}
-          className="rounded-full border border-white/15 px-3 py-1 text-[11px] text-white/60 transition hover:bg-white/10 hover:text-white"
+          disabled={locked}
+          className="rounded-full border border-white/15 px-3 py-1 text-[11px] text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Reset week
+          {resetLabel}
         </button>
       </div>
     </div>

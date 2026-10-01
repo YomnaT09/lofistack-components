@@ -21,7 +21,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
   const slug = (await params).slug;
   const item = getItem(slug);
   if (!item) notFound();
-  const { name, type, week, date, summary, features, howToUse, tech, Component } = item;
+  const { name, type, week, date, summary, features, howToUse, tech, Component, previewProps, props, usage } = item;
   const files = item.files ?? [`${slug}.tsx`];
   const idx = registry.findIndex((c) => c.slug === slug);
   const prev = registry[idx - 1];
@@ -63,7 +63,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
           }}
         />
         <div className="relative">
-          <Component />
+          <Component {...previewProps} />
         </div>
       </div>
 
@@ -100,6 +100,33 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
             ))}
           </ol>
         </section>
+      </div>
+
+      <h2 className="mb-4 mt-12 text-xl font-semibold">Usage</h2>
+      <CodeViewer code={usage} filename="Example.tsx" href={`${REPO}/blob/main/src/showcase/${files[0]}`} defaultOpen />
+
+      <h2 className="mb-4 mt-12 text-xl font-semibold">Props</h2>
+      <div className="overflow-x-auto rounded-2xl border border-white/10">
+        <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+          <thead className="bg-white/[0.04] text-white/70">
+            <tr>
+              <th scope="col" className="px-4 py-3 font-medium">Prop</th>
+              <th scope="col" className="px-4 py-3 font-medium">Type</th>
+              <th scope="col" className="px-4 py-3 font-medium">Default</th>
+              <th scope="col" className="px-4 py-3 font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {props.map((p) => (
+              <tr key={p.name} className="align-top">
+                <td className="px-4 py-3 font-mono text-[13px] text-indigo-200">{p.name}</td>
+                <td className="px-4 py-3 font-mono text-[12px] text-white/75">{p.type}</td>
+                <td className="px-4 py-3 font-mono text-[12px] text-white/75">{p.default}</td>
+                <td className="px-4 py-3 text-white/75">{p.description}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <h2 className="mb-4 mt-12 text-xl font-semibold">Source</h2>
