@@ -7,9 +7,9 @@ Every component has its own direct link: `/components/<slug>`.
 ## Add a component
 
 1. Create `src/showcase/<slug>.tsx` (default export, add `"use client"` if it uses state).
-2. Import it and add one entry in `src/lib/registry.ts`.
+2. Import it and add one entry in `src/lib/registry.ts` with a summary, features, how-to-use steps and tech list.
 
-The home page card, the `/components/<slug>` page and its live code viewer appear automatically.
+The home page card, the `/components/<slug>` page with its Details and Source sections appear automatically.
 
 ## Run locally
 
