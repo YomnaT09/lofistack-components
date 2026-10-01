@@ -22,5 +22,5 @@ npm run dev
 
 | Week | Type | Component |
 |---|---|---|
-| 01 | button | Magnetic Hover Button |
+| 01 | button | Glow Border Button |
 | 01 | card | Glass Profile Card |

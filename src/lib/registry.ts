@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import MagneticHoverButton from "@/showcase/magnetic-hover-button";
+import GlowBorderButton from "@/showcase/glow-border-button";
 import GlassProfileCard from "@/showcase/glass-profile-card";
 
 export type ComponentType_ =
@@ -18,12 +18,12 @@ export type GalleryItem = {
 // To add a component: create src/showcase/<slug>.tsx, import it, add one entry here.
 export const registry: GalleryItem[] = [
   {
-    slug: "magnetic-hover-button",
-    name: "Magnetic Hover Button",
+    slug: "glow-border-button",
+    name: "Glow Border Button",
     type: "button",
     week: 1,
-    description: "A button that gently pulls toward your cursor and springs back.",
-    Component: MagneticHoverButton,
+    description: "Dark button with a spinning rainbow border, glow on hover and a press effect.",
+    Component: GlowBorderButton,
   },
   {
     slug: "glass-profile-card",
