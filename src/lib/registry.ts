@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import GlowBorderButton from "@/showcase/glow-border-button";
+import FocusTimerButton from "@/showcase/focus-timer-button";
 import GlassProfileCard from "@/showcase/glass-profile-card";
 
 export type ComponentType_ =
@@ -18,12 +18,12 @@ export type GalleryItem = {
 // To add a component: create src/showcase/<slug>.tsx, import it, add one entry here.
 export const registry: GalleryItem[] = [
   {
-    slug: "glow-border-button",
-    name: "Glow Border Button",
+    slug: "focus-timer-button",
+    name: "Focus Timer Button",
     type: "button",
     week: 1,
-    description: "Dark button with a spinning rainbow border, glow on hover and a press effect.",
-    Component: GlowBorderButton,
+    description: "A button that morphs into a progress ring and counts down your focus session.",
+    Component: FocusTimerButton,
   },
   {
     slug: "glass-profile-card",
