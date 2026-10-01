@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import FocusTimerButton from "@/showcase/focus-timer-button";
-import GlassProfileCard from "@/showcase/glass-profile-card";
+import HabitStreakCard from "@/showcase/habit-streak-card";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -28,12 +28,12 @@ export const registry: GalleryItem[] = [
     previewScale: 0.42,
   },
   {
-    slug: "glass-profile-card",
-    name: "Glass Profile Card",
+    slug: "habit-streak-card",
+    name: "Habit Streak Card",
     type: "card",
     week: 1,
-    description: "Frosted glass profile card with a soft tilt on hover.",
-    Component: GlassProfileCard,
+    description: "A working weekly habit tracker with editable habit, streak counter, completion ring and saved progress.",
+    Component: HabitStreakCard,
     previewScale: 0.5,
   },
 ];

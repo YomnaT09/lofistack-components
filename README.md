@@ -23,4 +23,4 @@ npm run dev
 | Week | Type | Component |
 |---|---|---|
 | 01 | button | Focus Timer Button |
-| 01 | card | Glass Profile Card |
+| 01 | card | Habit Streak Card |
