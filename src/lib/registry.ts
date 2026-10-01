@@ -13,6 +13,7 @@ export type GalleryItem = {
   week: number;
   description: string;
   Component: ComponentType;
+  previewScale?: number; // shrink big components so they fit the home page card
 };
 
 // To add a component: create src/showcase/<slug>.tsx, import it, add one entry here.
@@ -22,8 +23,9 @@ export const registry: GalleryItem[] = [
     name: "Focus Timer Button",
     type: "button",
     week: 1,
-    description: "A button that morphs into a progress ring and counts down your focus session.",
+    description: "A glowing button that morphs into an aurora timer orb with a live tick ring, color shift and confetti finish.",
     Component: FocusTimerButton,
+    previewScale: 0.42,
   },
   {
     slug: "glass-profile-card",
@@ -32,6 +34,7 @@ export const registry: GalleryItem[] = [
     week: 1,
     description: "Frosted glass profile card with a soft tilt on hover.",
     Component: GlassProfileCard,
+    previewScale: 0.5,
   },
 ];
 

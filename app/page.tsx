@@ -9,14 +9,14 @@ export default function Home() {
         {registry.length} components so far. Each one has its own direct link.
       </p>
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {registry.map(({ slug, name, type, week, description, Component }) => (
+        {registry.map(({ slug, name, type, week, description, Component, previewScale }) => (
           <Link
             key={slug}
             href={`/components/${slug}`}
             className="group rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/25"
           >
             <div className="pointer-events-none flex h-48 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-indigo-950 to-slate-900">
-              <div className="scale-[0.6]">
+              <div style={{ transform: `scale(${previewScale ?? 0.6})` }}>
                 <Component />
               </div>
             </div>
