@@ -61,11 +61,6 @@ const DEFAULT_QUESTIONS: CatQuestion[] = [
     options: ["Good food", "Time with people I love", "Music", "Quiet time alone"],
   },
   {
-    id: "weekend",
-    question: "How would you spend a perfect free day?",
-    options: ["Sleeping in", "Going outside", "Making something", "Watching or reading"],
-  },
-  {
     id: "goal",
     question: "What is one thing you want to get better at?",
     placeholder: "Type your answer",
@@ -95,6 +90,9 @@ export default function LaptopCatQuiz({
   const [phase, setPhase] = useState<Phase>("asleep");
   const [index, setIndex] = useState(0);
   const [mood, setMood] = useState<Mood>("calm");
+  // After the last answer the cat jumps for joy, then drops back inside the laptop.
+  const [gone, setGone] = useState(false);
+  const [jumping, setJumping] = useState(false);
   const [typed, setTyped] = useState("");
   const [picked, setPicked] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; ok: boolean | null; extra?: string } | null>(null);
@@ -118,7 +116,19 @@ export default function LaptopCatQuiz({
     if (phase === "asking" || phase === "feedback" || phase === "done") panelRef.current?.focus();
   }, [phase, index]);
 
+  useEffect(() => {
+    if (phase !== "done") return;
+    setJumping(true);
+    const id = window.setTimeout(() => {
+      setJumping(false);
+      setGone(true);
+    }, 1300);
+    return () => window.clearTimeout(id);
+  }, [phase]);
+
   const restart = () => {
+    setGone(false);
+    setJumping(false);
     answers.current = [];
     setIndex(0);
     setTyped("");
@@ -170,7 +180,7 @@ export default function LaptopCatQuiz({
 
   const scored = answers.current.filter((a) => a.correct !== null);
   const score = scored.filter((a) => a.correct).length;
-  const up = phase !== "asleep";
+  const up = phase !== "asleep" && !gone;
 
   const eyes = useMemo(() => {
     const cx = [136, 164];
@@ -207,6 +217,8 @@ export default function LaptopCatQuiz({
         .llc-blink { animation: llc-blink 4.5s infinite; }
         .llc-tail { transform-origin: 196px 96px; animation: llc-tail 2.4s ease-in-out infinite; }
         .llc-earl { transform-origin: 128px 62px; animation: llc-ear 6s infinite; }
+        @keyframes llc-jump { 0%, 100% { transform: translateY(0) } 15% { transform: translateY(6px) } 35% { transform: translateY(-34px) } 55% { transform: translateY(0) } 70% { transform: translateY(-22px) } 88% { transform: translateY(0) } }
+        .llc-jump { animation: llc-jump 1.2s ease-in-out; }
         .llc-panel { animation: llc-pop 350ms ease-out; }
         .llc-cat { transition: transform 750ms cubic-bezier(.34,1.5,.64,1); }
         .llc-paw { transition: opacity 300ms ease-out 450ms; }
@@ -301,7 +313,7 @@ export default function LaptopCatQuiz({
           <div className="flex min-h-[160px] flex-col items-start justify-center gap-2">
             <p className="text-lg font-bold">{doneTitle}</p>
             <p className="text-sm text-white/80">
-              {scored.length > 0 ? `${catName} says you got ${score} of ${scored.length} right.` : `${catName} saved all ${total} of your answers.`}
+              {scored.length > 0 ? `${catName} says you got ${score} of ${scored.length} right.` : `${catName} saved all ${total} of your answers and hopped back into the laptop.`}
             </p>
             <button type="button" disabled={locked} onClick={restart} className={`${primary} mt-1`} style={{ background: grad }}>
               Play again
@@ -319,10 +331,15 @@ export default function LaptopCatQuiz({
               <stop offset="0%" stopColor={`hsl(${hue} 70% 28%)`} />
               <stop offset="100%" stopColor={`hsl(${(hue + 60) % 360} 70% 22%)`} />
             </linearGradient>
+            <clipPath id={`${uid}-clip`}>
+              <rect x="0" y="0" width="300" height="190" />
+            </clipPath>
           </defs>
 
           {/* cat (drawn behind the laptop) */}
+          <g clipPath={`url(#${uid}-clip)`}>
           <g className="llc-cat" style={{ transform: up ? "translateY(0)" : "translateY(78px)" }}>
+            <g className={jumping ? "llc-jump" : ""}>
             <g className="llc-tail">
               <path d="M196 98 Q232 92 228 62" stroke="#2a2a33" strokeWidth="9" strokeLinecap="round" fill="none" />
             </g>
@@ -347,6 +364,8 @@ export default function LaptopCatQuiz({
               <path d="M150 97 Q147 102 143 100 M150 97 Q153 102 157 100" stroke="#3a3a46" strokeWidth="2" fill="none" strokeLinecap="round" />
             )}
             <path d="M118 92 L100 88 M118 97 L100 99 M182 92 L200 88 M182 97 L200 99" stroke="#fff3e0" strokeOpacity=".8" strokeWidth="1.5" strokeLinecap="round" />
+            </g>
+          </g>
           </g>
 
           {/* laptop */}
@@ -358,7 +377,7 @@ export default function LaptopCatQuiz({
           <rect x="120" y="190" width="60" height="5" rx="2.5" fill="#1b1b2b" />
 
           {/* paws gripping the top edge */}
-          <g className="llc-paw" style={{ opacity: up ? 1 : 0 }}>
+          <g className="llc-paw" style={{ opacity: up && !jumping ? 1 : 0, transitionDelay: up ? "450ms" : "0ms" }}>
             <ellipse cx="126" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
             <ellipse cx="174" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
             <path d="M122 100 V104 M127 100 V104 M170 100 V104 M175 100 V104" stroke="#9a9aa8" strokeWidth="1.3" strokeLinecap="round" />
