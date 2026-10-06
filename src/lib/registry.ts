@@ -4,6 +4,7 @@ import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import MorphingPillNavbarDemo from "@/showcase/morphing-pill-navbar-demo";
 import PricingToggleSection from "@/showcase/pricing-toggle-section";
+import VinylSpinnerLoaderDemo from "@/showcase/vinyl-spinner-loader-demo";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -325,6 +326,63 @@ export default function Pricing() {
         { id: "crew", name: "Crew", monthlyPrice: 40, yearlyPrice: 32, features: ["5 seats", "Chat support"], highlighted: true, badge: "Best value" },
       ]}
       onSelect={(plan, period) => console.log(plan.id, period)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "vinyl-spinner-loader",
+    name: "Vinyl Record Loader",
+    type: "loader",
+    week: 3,
+    description: "A spinning vinyl record with a tonearm that travels across the grooves as loading progresses.",
+    Component: VinylSpinnerLoaderDemo,
+    previewScale: 0.5,
+    files: ["vinyl-spinner-loader.tsx", "vinyl-spinner-loader-demo.tsx"],
+    date: "2026-10-06",
+    summary:
+      "A loader that looks like a turntable. The record spins, the sheen stays still so the motion feels real, and the tonearm swings inward as the percentage grows. With no progress value it runs as an endless loader; when loading finishes the record slows to a crawl, the needle lifts and the text switches to the done message.",
+    features: [
+      "SVG record with grooves, a glowing label and a static sheen over a spinning disc",
+      "Tonearm that moves across the record with progress, or drifts slowly in endless mode",
+      "Determinate (progress 0 to 100) and indeterminate modes, with a matching progress bar",
+      "Finished state: record slows down, needle lifts, done message appears",
+      "Pause / resume button (aria-pressed) with an onPausedChange callback",
+      "Live region announces status; accent hue and rotation speed are props",
+      "Scales to any width up to 340px with no overflow; disabled state; visible focus; reduced-motion slows the spin right down",
+      "Typed props for progress, texts, speed, hue and callbacks",
+    ],
+    howToUse: [
+      "Watch the needle move as the percentage rises, then see the record wind down at 100%.",
+      "Press Pause to freeze the record and Resume to continue.",
+      "Press Endless mode for a loader with no known progress.",
+      "Press Replay with progress to run it again.",
+    ],
+    tech: ["React", "Tailwind CSS", "TypeScript", "SVG", "CSS animations"],
+    props: [
+      { name: "progress", type: "number", default: "-", description: "0 to 100. Leave empty for endless mode." },
+      { name: "title", type: "string", default: '"Mixing your playlist"', description: "Main line while loading." },
+      { name: "subtitle", type: "string", default: '"Dropping the needle on track 1"', description: "Second line while loading." },
+      { name: "doneLabel", type: "string", default: '"Ready to play"', description: "Text when finished." },
+      { name: "secondsPerTurn", type: "number", default: "1.8", description: "Seconds for one full turn of the record." },
+      { name: "accentHue", type: "number", default: "275", description: "Hue (0 to 360) for the label, bar and glow." },
+      { name: "loading", type: "boolean", default: "true", description: "Set to false to show the finished state." },
+      { name: "pausable", type: "boolean", default: "true", description: "Show the Pause / Resume button." },
+      { name: "onPausedChange", type: "(paused: boolean) => void", default: "-", description: "Called when the user pauses or resumes." },
+      { name: "disabled", type: "boolean", default: "false", description: "Dim the loader and disable the button." },
+      { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
+    ],
+    usage: `import VinylSpinnerLoader from "@/showcase/vinyl-spinner-loader";
+
+export default function Uploading({ percent }: { percent: number }) {
+  return (
+    <VinylSpinnerLoader
+      progress={percent}
+      title="Uploading album"
+      subtitle="12 of 14 tracks"
+      doneLabel="Upload complete"
+      accentHue={200}
+      onPausedChange={(paused) => console.log("paused:", paused)}
     />
   );
 }`,
