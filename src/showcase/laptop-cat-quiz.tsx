@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import logo from "@/assets/lofistack-logo.png";
 
 export interface CatQuestion {
   id: string;
@@ -174,9 +175,9 @@ export default function LaptopCatQuiz({
   const eyes = useMemo(() => {
     const cx = [136, 164];
     if (mood === "happy")
-      return cx.map((x) => <path key={x} d={`M${x - 6} 86 Q${x} 78 ${x + 6} 86`} stroke="#2b1b0e" strokeWidth="3" fill="none" strokeLinecap="round" />);
+      return cx.map((x) => <path key={x} d={`M${x - 6} 86 Q${x} 78 ${x + 6} 86`} stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" />);
     if (mood === "sad")
-      return cx.map((x) => <path key={x} d={`M${x - 6} 82 Q${x} 90 ${x + 6} 82`} stroke="#2b1b0e" strokeWidth="3" fill="none" strokeLinecap="round" />);
+      return cx.map((x) => <path key={x} d={`M${x - 6} 82 Q${x} 90 ${x + 6} 82`} stroke="#ffffff" strokeWidth="3" fill="none" strokeLinecap="round" />);
     const dy = mood === "think" ? -2 : 0;
     return cx.map((x) => (
       <g key={x} className="llc-blink" style={{ transformOrigin: `${x}px 84px` }}>
@@ -323,26 +324,27 @@ export default function LaptopCatQuiz({
           {/* cat (drawn behind the laptop) */}
           <g className="llc-cat" style={{ transform: up ? "translateY(0)" : "translateY(78px)" }}>
             <g className="llc-tail">
-              <path d="M196 98 Q232 92 228 62" stroke="#e8924a" strokeWidth="9" strokeLinecap="round" fill="none" />
+              <path d="M196 98 Q232 92 228 62" stroke="#2a2a33" strokeWidth="9" strokeLinecap="round" fill="none" />
             </g>
-            <ellipse cx="150" cy="130" rx="40" ry="34" fill="#f2a458" />
+            <ellipse cx="150" cy="130" rx="40" ry="34" fill="#2a2a33" stroke="#5c5c70" strokeWidth="1.5" />
             <g className="llc-earl">
-              <path d="M118 70 L121 38 L146 58 Z" fill="#f2a458" />
-              <path d="M124 62 L125 47 L137 57 Z" fill="#f7b8c0" />
+              <path d="M118 70 L121 38 L146 58 Z" fill="#2a2a33" stroke="#5c5c70" strokeWidth="1.5" />
+              <path d="M124 62 L125 47 L137 57 Z" fill="#d9d9e3" />
             </g>
-            <path d="M182 70 L179 38 L154 58 Z" fill="#f2a458" />
-            <path d="M176 62 L175 47 L163 57 Z" fill="#f7b8c0" />
-            <ellipse cx="150" cy="84" rx="36" ry="30" fill="#f2a458" />
-            <path d="M128 66 L132 76 M150 60 L150 72 M172 66 L168 76" stroke="#d37e34" strokeWidth="3" strokeLinecap="round" />
-            <ellipse cx="150" cy="98" rx="14" ry="10" fill="#fde6c8" />
+            <path d="M182 70 L179 38 L154 58 Z" fill="#2a2a33" stroke="#5c5c70" strokeWidth="1.5" />
+            <path d="M176 62 L175 47 L163 57 Z" fill="#d9d9e3" />
+            <ellipse cx="150" cy="140" rx="14" ry="22" fill="#ffffff" />
+            <ellipse cx="150" cy="84" rx="36" ry="30" fill="#2a2a33" stroke="#5c5c70" strokeWidth="1.5" />
+            <path d="M128 66 L132 76 M150 60 L150 72 M172 66 L168 76" stroke="#4a4a5c" strokeWidth="3" strokeLinecap="round" />
+            <ellipse cx="150" cy="98" rx="14" ry="10" fill="#ffffff" />
             {eyes}
-            <path d="M146 92 L154 92 L150 97 Z" fill="#e5757f" />
+            <path d="M146 92 L154 92 L150 97 Z" fill="#9a9aa8" />
             {mood === "happy" ? (
-              <path d="M142 99 Q150 108 158 99 Q150 103 142 99" fill="#8a3a3a" stroke="#8a3a3a" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M142 99 Q150 108 158 99 Q150 103 142 99" fill="#3a3a46" stroke="#3a3a46" strokeWidth="1.5" strokeLinejoin="round" />
             ) : mood === "sad" ? (
-              <path d="M143 102 Q150 97 157 102" stroke="#6b3a24" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M143 102 Q150 97 157 102" stroke="#3a3a46" strokeWidth="2" fill="none" strokeLinecap="round" />
             ) : (
-              <path d="M150 97 Q147 102 143 100 M150 97 Q153 102 157 100" stroke="#6b3a24" strokeWidth="2" fill="none" strokeLinecap="round" />
+              <path d="M150 97 Q147 102 143 100 M150 97 Q153 102 157 100" stroke="#3a3a46" strokeWidth="2" fill="none" strokeLinecap="round" />
             )}
             <path d="M118 92 L100 88 M118 97 L100 99 M182 92 L200 88 M182 97 L200 99" stroke="#fff3e0" strokeOpacity=".8" strokeWidth="1.5" strokeLinecap="round" />
           </g>
@@ -350,21 +352,16 @@ export default function LaptopCatQuiz({
           {/* laptop */}
           <rect x="45" y="100" width="210" height="90" rx="9" fill="#1b1b2b" stroke="#3b3b58" strokeWidth="2" />
           <rect x="53" y="108" width="194" height="74" rx="4" fill={`url(#${uid}-scr)`} className="llc-screen" />
-          <g stroke="#fff" strokeOpacity=".55" strokeWidth="3" strokeLinecap="round">
-            <path d="M66 124 H112" />
-            <path d="M74 136 H138" />
-            <path d="M74 148 H104" />
-            <path d="M66 160 H124" />
-          </g>
-          <circle cx="215" cy="122" r="10" fill="#fff" fillOpacity=".18" />
+          <rect x="72" y="121" width="156" height="48" rx="8" fill="#fff" fillOpacity=".94" />
+          <image href={logo.src} x="85" y="128" width="130" height="34" preserveAspectRatio="xMidYMid meet" />
           <rect x="26" y="190" width="248" height="12" rx="6" fill="#2a2a3f" />
           <rect x="120" y="190" width="60" height="5" rx="2.5" fill="#1b1b2b" />
 
           {/* paws gripping the top edge */}
           <g className="llc-paw" style={{ opacity: up ? 1 : 0 }}>
-            <ellipse cx="126" cy="101" rx="11" ry="7" fill="#f7b46e" />
-            <ellipse cx="174" cy="101" rx="11" ry="7" fill="#f7b46e" />
-            <path d="M122 100 V104 M127 100 V104 M170 100 V104 M175 100 V104" stroke="#d37e34" strokeWidth="1.3" strokeLinecap="round" />
+            <ellipse cx="126" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
+            <ellipse cx="174" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
+            <path d="M122 100 V104 M127 100 V104 M170 100 V104 M175 100 V104" stroke="#9a9aa8" strokeWidth="1.3" strokeLinecap="round" />
           </g>
         </svg>
 
