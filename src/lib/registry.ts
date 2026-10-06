@@ -3,6 +3,7 @@ import FocusTimerButton from "@/showcase/focus-timer-button";
 import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import MorphingPillNavbarDemo from "@/showcase/morphing-pill-navbar-demo";
+import PricingToggleSection from "@/showcase/pricing-toggle-section";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -263,6 +264,67 @@ export default function Layout() {
         { id: "soon", label: "Soon", disabled: true },
       ]}
       onNavigate={(item) => console.log("Go to", item.id)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "pricing-toggle-section",
+    name: "Pricing Toggle Section",
+    type: "section",
+    week: 3,
+    description: "A pricing section with a sliding Monthly / Yearly switch, count-up prices and a highlighted plan.",
+    Component: PricingToggleSection,
+    previewScale: 0.33,
+    previewWidth: 900,
+    date: "2026-10-06",
+    summary:
+      "A ready-to-drop pricing section. Flip the Monthly / Yearly switch and the gradient thumb slides across while every price counts up or down to its new value, the billed-per-year total updates and a green savings pill lights up. The middle plan is lifted with a glowing ring, and each plan button remembers your choice.",
+    features: [
+      "Segmented Monthly / Yearly switch with a springy sliding thumb, built as an accessible radio group (arrow keys, Home and End)",
+      "Prices count up or down with an ease-out tween; screen readers get the final price, not the animation",
+      "Savings pill computed from your plans (Save up to 21%), or set your own text",
+      "Yearly view shows the billed-per-year total under each price",
+      "Highlighted plan with badge, ring and lift; free plans show Free",
+      "Plan buttons with a Selected state and an onSelect callback that receives the plan and period",
+      "Responsive: one column on phones, three columns from 768px, no horizontal overflow down to 280px",
+      "Typed props for plans, currency, locale and callbacks; disabled and loading (skeleton) states; visible focus; reduced-motion support",
+    ],
+    howToUse: [
+      "Click Yearly (or use the arrow keys on the switch) and watch the prices change.",
+      "Switch back to Monthly to see the full price again.",
+      "Press a plan button to select it; it turns green and says Selected.",
+      "Make the window narrower than 768px to see the plans stack.",
+    ],
+    tech: ["React", "Tailwind CSS", "TypeScript", "requestAnimationFrame", "Intl.NumberFormat"],
+    props: [
+      { name: "plans", type: "PricingPlan[]", default: "Starter, Pro, Team", description: "Plans as { id, name, description?, monthlyPrice, yearlyPrice, features, highlighted?, badge?, ctaLabel?, disabled? }. yearlyPrice is per month when billed yearly." },
+      { name: "title", type: "string", default: '"Simple pricing, no surprises"', description: "Section heading." },
+      { name: "subtitle", type: "string", default: '"Pick a plan and switch to yearly to save..."', description: "Text under the heading." },
+      { name: "defaultPeriod", type: '"monthly" | "yearly"', default: '"monthly"', description: "Period selected on first render." },
+      { name: "onPeriodChange", type: "(period) => void", default: "-", description: "Called when the switch changes." },
+      { name: "currency", type: "string", default: '"USD"', description: "ISO currency code." },
+      { name: "locale", type: "string", default: '"en-US"', description: "Locale used to format prices." },
+      { name: "saveLabel", type: "string", default: "auto", description: "Savings pill text. Leave empty to compute Save up to X%." },
+      { name: "onSelect", type: "(plan, period) => void", default: "-", description: "Called when a plan button is pressed." },
+      { name: "disabled", type: "boolean", default: "false", description: "Lock the switch and all plan buttons." },
+      { name: "loading", type: "boolean", default: "false", description: "Show skeleton cards and lock the section." },
+      { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
+    ],
+    usage: `import PricingToggleSection from "@/showcase/pricing-toggle-section";
+
+export default function Pricing() {
+  return (
+    <PricingToggleSection
+      title="Pick your plan"
+      defaultPeriod="yearly"
+      currency="EUR"
+      locale="de-DE"
+      plans={[
+        { id: "solo", name: "Solo", monthlyPrice: 12, yearlyPrice: 9, features: ["1 seat", "Email support"] },
+        { id: "crew", name: "Crew", monthlyPrice: 40, yearlyPrice: 32, features: ["5 seats", "Chat support"], highlighted: true, badge: "Best value" },
+      ]}
+      onSelect={(plan, period) => console.log(plan.id, period)}
     />
   );
 }`,
