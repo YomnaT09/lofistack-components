@@ -78,7 +78,7 @@ type Mood = "calm" | "happy" | "sad" | "think";
 
 export default function LaptopCatQuiz({
   questions = DEFAULT_QUESTIONS,
-  catName = "Miso",
+  catName = "Messi",
   introText,
   doneTitle = "All done!",
   accentHue = 265,
@@ -242,7 +242,7 @@ export default function LaptopCatQuiz({
         ) : phase === "peek" ? (
           <div className="flex min-h-[160px] flex-col items-start justify-center gap-3">
             <p className="text-base font-semibold">
-              {introText ?? `Psst... I am ${catName}. Click me, I have ${total} question${total === 1 ? "" : "s"} for you.`}
+              {introText ?? `Mewwww... I am ${catName}. Click me, I have ${total} question${total === 1 ? "" : "s"} for you.`}
             </p>
             <button type="button" disabled={locked || total === 0} onClick={ask} className={primary} style={{ background: grad }}>
               Ask me

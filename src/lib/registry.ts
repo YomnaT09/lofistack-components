@@ -236,7 +236,7 @@ export default function Page() {
     tech: ["React", "Tailwind CSS", "TypeScript", "SVG", "CSS animations"],
     props: [
       { name: "questions", type: "CatQuestion[]", default: "6 simple life questions", description: "Questions as { id, question, options?, answerIndex?, explanation?, placeholder? }. No options means a typed answer." },
-      { name: "catName", type: "string", default: '"Miso"', description: "Name the cat uses for itself." },
+      { name: "catName", type: "string", default: '"Messi"', description: "Name the cat uses for itself." },
       { name: "introText", type: "string", default: "auto", description: "What the cat says when it pops out." },
       { name: "doneTitle", type: "string", default: '"All done!"', description: "Heading on the final screen." },
       { name: "accentHue", type: "number", default: "265", description: "Hue (0 to 360) of buttons and the screen glow." },
