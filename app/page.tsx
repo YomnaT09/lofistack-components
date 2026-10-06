@@ -29,14 +29,14 @@ export default function Home() {
 
       <section className="relative mx-auto max-w-6xl px-6 pb-20 pt-8">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {registry.map(({ slug, name, type, week, description, Component, previewScale, previewProps }) => (
+          {registry.map(({ slug, name, type, week, description, Component, previewScale, previewProps, previewWidth }) => (
             <Link
               key={slug}
               href={`/components/${slug}`}
               className="group relative rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition duration-300 hover:-translate-y-1 hover:border-indigo-400/50 hover:shadow-[0_20px_60px_-20px_rgba(99,102,241,.6)]"
             >
               <div className="pointer-events-none flex h-52 items-center justify-center overflow-hidden rounded-xl bg-[radial-gradient(ellipse_at_top,#2a2468_0%,#0b0b1c_70%)]">
-                <div style={{ transform: `scale(${previewScale ?? 0.6})` }}>
+                <div className={previewWidth ? "shrink-0" : ""} style={{ transform: `scale(${previewScale ?? 0.6})`, width: previewWidth }}>
                   <Component {...previewProps} />
                 </div>
               </div>

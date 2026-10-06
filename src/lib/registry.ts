@@ -1,6 +1,8 @@
 import type { ComponentType as ReactComponent } from "react";
 import FocusTimerButton from "@/showcase/focus-timer-button";
 import HabitStreakCard from "@/showcase/habit-streak-card";
+import ColorContrastChecker from "@/showcase/color-contrast-checker";
+import MorphingPillNavbarDemo from "@/showcase/morphing-pill-navbar-demo";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -20,6 +22,7 @@ export type GalleryItem = {
   props: PropDoc[];
   usage: string; // copy-paste example shown on the component page
   previewScale?: number; // shrink big components so they fit the home page card
+  previewWidth?: number; // fixed layout width (px) of the home page preview, for components wider than the card
   date: string; // YYYY-MM-DD the component was added
   summary: string; // longer explanation shown on the component page
   features: string[];
@@ -143,6 +146,123 @@ export default function Page() {
       dayLabels={["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]}
       storageKey="reading-habit"
       onChange={({ streak }) => console.log("Streak:", streak)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "color-contrast-checker",
+    name: "Color Contrast Checker",
+    type: "form",
+    week: 2,
+    description: "Pick a text and background color and see the WCAG contrast ratio, pass/fail badges and a one-click fix.",
+    Component: ColorContrastChecker,
+    previewScale: 0.3,
+    date: "2026-10-06",
+    summary:
+      "A small accessibility tool for designers and developers. Choose a text color and a background color and it instantly shows the WCAG contrast ratio, whether the pair passes AA and AAA for normal and large text, and whether it is strong enough for UI parts like icons and borders. If the pair fails, it suggests the closest shade of your text color that passes, and you can copy the result as CSS.",
+    features: [
+      "Native color pickers plus hex fields that accept 3 or 6 digits, with or without #",
+      "Live preview with normal text, large heading text and a bordered UI element",
+      "Contrast ratio computed with the WCAG 2.x formula, shown truncated so 4.499 never looks like a pass",
+      "Five pass/fail checks: AA and AAA for normal and large text, and UI components (3:1)",
+      "Meter that shows where the ratio sits against the 3, 4.5 and 7 thresholds",
+      "Smart fix: keeps the hue and nudges the lightness to the nearest passing shade, with a Use it button",
+      "Swap button and Copy as CSS button",
+      "Invalid hex input is flagged and the last valid color keeps being used",
+      "Typed props for colors, text and callbacks; disabled and loading states; labelled inputs, live result announcements and visible keyboard focus",
+      "Fully responsive down to 280px wide",
+    ],
+    howToUse: [
+      "Pick a text color and a background color with the swatches, or type hex values.",
+      "Read the ratio and the five Pass/Fail checks under the preview.",
+      "If AA fails, press Use it to apply the suggested shade.",
+      "Press Swap to flip the colors, or Copy as CSS to copy both values.",
+    ],
+    tech: ["React", "Tailwind CSS", "TypeScript", "WCAG 2.x math"],
+    props: [
+      { name: "foreground", type: "string", default: '"#e0e7ff"', description: "Text color (3 or 6 digit hex)." },
+      { name: "background", type: "string", default: '"#4f46e5"', description: "Background color (3 or 6 digit hex)." },
+      { name: "sampleText", type: "string", default: '"The quick brown fox..."', description: "Text shown in the live preview." },
+      { name: "title", type: "string", default: '"Color contrast checker"', description: "Heading of the card." },
+      { name: "disabled", type: "boolean", default: "false", description: "Disable every control." },
+      { name: "loading", type: "boolean", default: "false", description: "Show a skeleton and disable the card." },
+      { name: "onChange", type: "(result: ContrastResult) => void", default: "-", description: "Called with the colors, ratio and every pass/fail flag when a color changes." },
+      { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
+    ],
+    usage: `import ColorContrastChecker from "@/showcase/color-contrast-checker";
+
+export default function Page() {
+  return (
+    <ColorContrastChecker
+      foreground="#1f2937"
+      background="#fef3c7"
+      sampleText="Check your brand colors"
+      onChange={({ ratio, aaNormal }) =>
+        console.log(\`Ratio \${ratio}:1, AA normal text: \${aaNormal ? "pass" : "fail"}\`)
+      }
+    />
+  );
+}`,
+  },
+  {
+    slug: "morphing-pill-navbar",
+    name: "Morphing Pill Navbar",
+    type: "navbar",
+    week: 2,
+    description: "A floating pill navbar whose highlight glides and stretches between links, and turns into a morphing menu on mobile.",
+    Component: MorphingPillNavbarDemo,
+    previewScale: 0.45,
+    previewWidth: 680,
+    files: ["morphing-pill-navbar.tsx", "morphing-pill-navbar-demo.tsx"],
+    date: "2026-10-06",
+    summary:
+      "A floating navigation bar shaped like a pill. A gradient highlight glides to the link you choose and stretches to match its width with a springy motion, while a soft ghost pill follows your hover or keyboard focus. On phones it collapses into a menu button whose three bars turn into a cross, and the pill grows downward to reveal the links.",
+    features: [
+      "Gradient pill that glides and resizes to the active link with a springy curve",
+      "Soft hover and keyboard-focus pill that follows the pointer",
+      "Works as a link bar (href) or as buttons, controlled or uncontrolled",
+      "Mobile layout below 768px: hamburger that morphs into a cross, and a panel that grows open",
+      "Escape closes the mobile menu, and hidden links are removed from the tab order",
+      "Per-item disabled state, plus disabled and loading (skeleton) states for the whole bar",
+      "aria-current on the active page, labelled landmark, visible focus rings and reduced-motion support",
+      "Typed props for items, labels and callbacks",
+    ],
+    howToUse: [
+      "Hover a link to see the soft pill follow, then click to send the gradient pill there.",
+      "Use Tab to move through links, and Enter to choose one.",
+      "Make the window narrower than 768px (or open it on a phone) to get the menu button.",
+      "Press Escape to close the mobile menu.",
+    ],
+    tech: ["React", "Tailwind CSS", "TypeScript", "CSS transitions"],
+    props: [
+      { name: "items", type: "NavItem[]", default: "Home, Features, Pricing, Docs, Contact", description: "Links as { id, label, href?, disabled? }." },
+      { name: "activeId", type: "string", default: "-", description: "Controlled active item. Leave empty to let the navbar manage it." },
+      { name: "defaultActiveId", type: "string", default: "first item", description: "Initially active item when uncontrolled." },
+      { name: "logo", type: "string", default: '"Lofi"', description: "Brand text on the left." },
+      { name: "ctaLabel", type: "string", default: '"Sign in"', description: "Call-to-action text. Use an empty string to hide it." },
+      { name: "ariaLabel", type: "string", default: '"Main"', description: "Accessible name of the navigation landmark." },
+      { name: "onNavigate", type: "(item: NavItem) => void", default: "-", description: "Called when a link is chosen." },
+      { name: "onCtaClick", type: "() => void", default: "-", description: "Called when the call-to-action is pressed." },
+      { name: "disabled", type: "boolean", default: "false", description: "Disable the whole bar." },
+      { name: "loading", type: "boolean", default: "false", description: "Show skeleton pills and disable the bar." },
+      { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
+    ],
+    usage: `import MorphingPillNavbar from "@/showcase/morphing-pill-navbar";
+
+export default function Layout() {
+  return (
+    <MorphingPillNavbar
+      logo="Acme"
+      ctaLabel="Get started"
+      defaultActiveId="docs"
+      items={[
+        { id: "home", label: "Home", href: "/" },
+        { id: "docs", label: "Docs", href: "/docs" },
+        { id: "blog", label: "Blog", href: "/blog" },
+        { id: "soon", label: "Soon", disabled: true },
+      ]}
+      onNavigate={(item) => console.log("Go to", item.id)}
     />
   );
 }`,
