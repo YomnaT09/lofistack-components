@@ -60,12 +60,6 @@ const DEFAULT_QUESTIONS: CatQuestion[] = [
     question: "What makes you happiest on a normal day?",
     options: ["Good food", "Time with people I love", "Music", "Quiet time alone"],
   },
-  {
-    id: "goal",
-    question: "What is one thing you want to get better at?",
-    placeholder: "Type your answer",
-  },
-  { id: "thanks", question: "What is one thing you are grateful for today?", placeholder: "Type your answer" },
 ];
 
 type Phase = "asleep" | "peek" | "asking" | "feedback" | "done";
