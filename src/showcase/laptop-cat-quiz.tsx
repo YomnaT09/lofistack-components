@@ -47,25 +47,29 @@ export interface LaptopCatQuizProps {
 }
 
 const DEFAULT_QUESTIONS: CatQuestion[] = [
+  { id: "name", question: "First things first, what should I call you?", placeholder: "Your name" },
   {
-    id: "q1",
-    question: "Which hook runs after every render by default?",
-    options: ["useMemo", "useEffect", "useRef"],
-    answerIndex: 1,
-    explanation: "useEffect runs after render unless you pass a dependency array.",
+    id: "morning",
+    question: "Are you a morning person or a night owl?",
+    options: ["Morning person", "Night owl", "Depends on the day"],
+    explanation: "Both are fine. Cats nap in the day and zoom at night.",
   },
   {
-    id: "q2",
-    question: "What does Tailwind's `md:` prefix target?",
-    options: ["Screens 768px and wider", "Dark mode", "Mobile only"],
-    answerIndex: 0,
-    explanation: "Tailwind is mobile first, so md: applies from 768px and up.",
+    id: "happy",
+    question: "What makes you happiest on a normal day?",
+    options: ["Good food", "Time with people I love", "Music", "Quiet time alone"],
   },
   {
-    id: "q3",
-    question: "What is one thing you want to build this month?",
+    id: "weekend",
+    question: "How would you spend a perfect free day?",
+    options: ["Sleeping in", "Going outside", "Making something", "Watching or reading"],
+  },
+  {
+    id: "goal",
+    question: "What is one thing you want to get better at?",
     placeholder: "Type your answer",
   },
+  { id: "thanks", question: "What is one thing you are grateful for today?", placeholder: "Type your answer" },
 ];
 
 type Phase = "asleep" | "peek" | "asking" | "feedback" | "done";
