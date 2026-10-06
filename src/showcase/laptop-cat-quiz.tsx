@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import wallpaper from "@/assets/laptop-wallpaper.jpg";
+import screenImg from "@/assets/laptop-screen-cat.jpg";
 
 export interface CatQuestion {
   id: string;
@@ -367,7 +367,7 @@ export default function LaptopCatQuiz({
           {/* laptop */}
           <rect x="45" y="100" width="210" height="90" rx="9" fill="#1b1b2b" stroke="#3b3b58" strokeWidth="2" />
           <rect x="53" y="108" width="194" height="74" rx="4" fill={`url(#${uid}-scr)`} className="llc-screen" />
-<image href={wallpaper.src} x="53" y="108" width="194" height="74" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}-screen)`} />
+<image href={screenImg.src} x="53" y="108" width="194" height="74" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${uid}-screen)`} />
           <rect x="26" y="190" width="248" height="12" rx="6" fill="#2a2a3f" />
           <rect x="120" y="190" width="60" height="5" rx="2.5" fill="#1b1b2b" />
 
