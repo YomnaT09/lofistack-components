@@ -2,6 +2,7 @@ import type { ComponentType as ReactComponent } from "react";
 import FocusTimerButton from "@/showcase/focus-timer-button";
 import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
+import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -200,6 +201,65 @@ export default function Page() {
       onChange={({ ratio, aaNormal }) =>
         console.log(\`Ratio \${ratio}:1, AA normal text: \${aaNormal ? "pass" : "fail"}\`)
       }
+    />
+  );
+}`,
+  },
+  {
+    slug: "laptop-cat-quiz",
+    name: "Laptop Cat Quiz",
+    type: "card",
+    week: 2,
+    description: "A cat pops out of a laptop. Click it and it asks you questions one by one, reacts to your answers and scores you.",
+    Component: LaptopCatQuiz,
+    previewScale: 0.5,
+    date: "2026-10-06",
+    summary:
+      "A tiny quiz with a mascot. A laptop sits on screen, and after a moment a cat springs up from behind it. Click the cat and it asks your questions one at a time, as multiple choice or as a typed answer. The cat looks puzzled while you think, happy when you are right and sad when you are wrong, then shows the explanation and your final score. Questions are plain data, so you can swap in your own.",
+    features: [
+      "Cat springs out from behind the laptop with a bounce, then blinks, twitches an ear and swishes its tail",
+      "Click the cat (or the Ask me button) to start; questions come one at a time with a progress count",
+      "Multiple choice with a correct answer, opinion questions with no right answer, or typed answers",
+      "Cat moods: puzzled while asking, happy on a correct answer, sad on a wrong one",
+      "Explanation after each answer, a final score and Play again",
+      "Questions are a typed array: { id, question, options?, answerIndex?, explanation?, placeholder? }",
+      "onAnswer and onComplete callbacks give you every answer and the score",
+      "Responsive up to 420px wide with no overflow; disabled and loading (skeleton) states; autoReveal off shows an Open the laptop button",
+      "Live region and focus move with each step, visible focus rings, reduced-motion support",
+    ],
+    howToUse: [
+      "Wait a second for the cat to pop out of the laptop, then click it (or press Ask me).",
+      "Choose an answer, or type one and press Send.",
+      "Read the cat's reaction and press Next question.",
+      "At the end, check your score and press Play again to restart.",
+    ],
+    tech: ["React", "Tailwind CSS", "TypeScript", "SVG", "CSS animations"],
+    props: [
+      { name: "questions", type: "CatQuestion[]", default: "3 sample questions", description: "Questions as { id, question, options?, answerIndex?, explanation?, placeholder? }. No options means a typed answer." },
+      { name: "catName", type: "string", default: '"Miso"', description: "Name the cat uses for itself." },
+      { name: "introText", type: "string", default: "auto", description: "What the cat says when it pops out." },
+      { name: "doneTitle", type: "string", default: '"All done!"', description: "Heading on the final screen." },
+      { name: "accentHue", type: "number", default: "265", description: "Hue (0 to 360) of buttons and the screen glow." },
+      { name: "autoReveal", type: "boolean", default: "true", description: "Pop the cat out automatically. When false, an Open the laptop button appears." },
+      { name: "revealDelayMs", type: "number", default: "700", description: "Delay before the cat pops out." },
+      { name: "onAnswer", type: "(question, answer, correct) => void", default: "-", description: "Called after each answer. correct is null for typed or opinion answers." },
+      { name: "onComplete", type: "(result: CatQuizResult) => void", default: "-", description: "Called with { score, total, answers } when the last question is done." },
+      { name: "disabled", type: "boolean", default: "false", description: "Lock the cat and all buttons." },
+      { name: "loading", type: "boolean", default: "false", description: "Keep the cat asleep and show a skeleton." },
+      { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
+    ],
+    usage: `import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
+
+export default function Onboarding() {
+  return (
+    <LaptopCatQuiz
+      catName="Pixel"
+      accentHue={180}
+      questions={[
+        { id: "a", question: "Which tag makes a link?", options: ["<div>", "<a>", "<p>"], answerIndex: 1, explanation: "<a> is the anchor element." },
+        { id: "b", question: "What do you want to learn next?", placeholder: "e.g. Next.js" },
+      ]}
+      onComplete={(r) => console.log(r.score, "/", r.total)}
     />
   );
 }`,
