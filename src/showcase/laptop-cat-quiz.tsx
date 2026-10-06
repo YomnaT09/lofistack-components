@@ -90,8 +90,8 @@ export default function LaptopCatQuiz({
   const [phase, setPhase] = useState<Phase>("asleep");
   const [index, setIndex] = useState(0);
   const [mood, setMood] = useState<Mood>("calm");
-  // After the last answer the cat leaps out onto the laptop, then vanishes in a puff.
-  const [exit, setExit] = useState<"none" | "hop" | "poof" | "gone">("none");
+  // After the last answer the cat waves goodbye with its paw.
+  const [exit, setExit] = useState<"none" | "wave">("none");
   const [typed, setTyped] = useState("");
   const [picked, setPicked] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; ok: boolean | null; extra?: string } | null>(null);
@@ -117,13 +117,7 @@ export default function LaptopCatQuiz({
 
   useEffect(() => {
     if (phase !== "done") return;
-    setExit("hop");
-    const t1 = window.setTimeout(() => setExit("poof"), 1900);
-    const t2 = window.setTimeout(() => setExit("gone"), 2500);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-    };
+    setExit("wave");
   }, [phase]);
 
   const restart = () => {
@@ -179,7 +173,7 @@ export default function LaptopCatQuiz({
 
   const scored = answers.current.filter((a) => a.correct !== null);
   const score = scored.filter((a) => a.correct).length;
-  const up = phase !== "asleep" && exit !== "gone";
+  const up = phase !== "asleep";
 
   const eyes = useMemo(() => {
     const cx = [136, 164];
@@ -216,12 +210,8 @@ export default function LaptopCatQuiz({
         .llc-blink { animation: llc-blink 4.5s infinite; }
         .llc-tail { transform-origin: 196px 96px; animation: llc-tail 2.4s ease-in-out infinite; }
         .llc-earl { transform-origin: 128px 62px; animation: llc-ear 6s infinite; }
-        @keyframes llc-hop { 0% { transform: translate(0,0) scale(1) } 12% { transform: translate(0,6px) scale(1) } 32% { transform: translate(0,-66px) scale(.8) } 50% { transform: translate(0,-55px) scale(.75,.72) } 58% { transform: translate(0,-55px) scale(.75) } 72% { transform: translate(0,-72px) scale(.75) } 88%, 100% { transform: translate(0,-55px) scale(.75) } }
-        @keyframes llc-poof { 0% { opacity: 1; transform: translate(0,-55px) scale(.75) } 100% { opacity: 0; transform: translate(0,-55px) scale(0) } }
-        @keyframes llc-puff { 0% { opacity: .9; transform: scale(.2) } 100% { opacity: 0; transform: scale(1.6) } }
-        .llc-hop { transform-origin: 150px 164px; animation: llc-hop 1.8s ease-in-out forwards; }
-        .llc-poof { transform-origin: 150px 164px; animation: llc-poof 600ms ease-in forwards; }
-        .llc-puff { transform-box: fill-box; transform-origin: center; animation: llc-puff 600ms ease-out forwards; }
+        @keyframes llc-wave { 0%, 100% { transform: rotate(-8deg) } 50% { transform: rotate(24deg) } }
+        .llc-wave { transform-origin: 192px 108px; animation: llc-wave 600ms ease-in-out infinite; }
         .llc-panel { animation: llc-pop 350ms ease-out; }
         .llc-cat { transition: transform 750ms cubic-bezier(.34,1.5,.64,1); }
         .llc-paw { transition: opacity 300ms ease-out 450ms; }
@@ -316,7 +306,7 @@ export default function LaptopCatQuiz({
           <div className="flex min-h-[160px] flex-col items-start justify-center gap-2">
             <p className="text-lg font-bold">{doneTitle}</p>
             <p className="text-sm text-white/80">
-              {scored.length > 0 ? `${catName} says you got ${score} of ${scored.length} right.` : `${catName} saved all ${total} of your answers and vanished in a puff.`}
+              {scored.length > 0 ? `${catName} says you got ${score} of ${scored.length} right.` : `${catName} saved all ${total} of your answers and says bye!`}
             </p>
             <button type="button" disabled={locked} onClick={restart} className={`${primary} mt-1`} style={{ background: grad }}>
               Play again
@@ -341,8 +331,8 @@ export default function LaptopCatQuiz({
 
           {/* cat (drawn behind the laptop) */}
           <g clipPath={`url(#${uid}-clip)`}>
-          <g className="llc-cat" style={{ transform: up ? "translateY(0)" : "translateY(78px)", transition: exit === "gone" ? "none" : undefined }}>
-            <g className={exit === "hop" ? "llc-hop" : exit === "poof" || exit === "gone" ? "llc-poof" : ""} style={exit === "gone" ? { opacity: 0 } : undefined}>
+          <g className="llc-cat" style={{ transform: up ? "translateY(0)" : "translateY(78px)" }}>
+            <g>
             <g className="llc-tail">
               <path d="M196 98 Q232 92 228 62" stroke="#2a2a33" strokeWidth="9" strokeLinecap="round" fill="none" />
             </g>
@@ -379,20 +369,26 @@ export default function LaptopCatQuiz({
           <rect x="26" y="190" width="248" height="12" rx="6" fill="#2a2a3f" />
           <rect x="120" y="190" width="60" height="5" rx="2.5" fill="#1b1b2b" />
 
-          {exit === "poof" && (
-            <g aria-hidden>
-              {[[130, 62], [150, 50], [170, 62], [140, 78], [160, 78]].map(([x, y]) => (
-                <circle key={`${x}-${y}`} className="llc-puff" cx={x} cy={y} r="14" fill="#fff" fillOpacity=".85" />
-              ))}
+          {/* paws gripping the top edge */}
+          <g className="llc-paw" style={{ opacity: up ? 1 : 0, transitionDelay: up ? "450ms" : "0ms" }}>
+            <ellipse cx="126" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
+            <path d="M122 100 V104 M127 100 V104" stroke="#9a9aa8" strokeWidth="1.3" strokeLinecap="round" />
+            {exit === "none" && (
+              <>
+                <ellipse cx="174" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
+                <path d="M170 100 V104 M175 100 V104" stroke="#9a9aa8" strokeWidth="1.3" strokeLinecap="round" />
+              </>
+            )}
+          </g>
+
+          {/* goodbye wave: the right paw lifts and swings */}
+          {exit === "wave" && (
+            <g className="llc-wave">
+              <path d="M192 106 L196 76" stroke="#2a2a33" strokeWidth="11" strokeLinecap="round" />
+              <circle cx="197" cy="68" r="9" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
+              <path d="M193 66 V70 M197 65 V70 M201 66 V70" stroke="#9a9aa8" strokeWidth="1.2" strokeLinecap="round" />
             </g>
           )}
-
-          {/* paws gripping the top edge */}
-          <g className="llc-paw" style={{ opacity: up && exit === "none" ? 1 : 0, transitionDelay: up ? "450ms" : "0ms" }}>
-            <ellipse cx="126" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
-            <ellipse cx="174" cy="101" rx="11" ry="7" fill="#ffffff" stroke="#9a9aa8" strokeWidth="1" />
-            <path d="M122 100 V104 M127 100 V104 M170 100 V104 M175 100 V104" stroke="#9a9aa8" strokeWidth="1.3" strokeLinecap="round" />
-          </g>
         </svg>
 
         {/* the cat itself is the click target */}

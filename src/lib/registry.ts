@@ -217,7 +217,7 @@ export default function Page() {
     summary:
       "A tiny quiz with a mascot. A laptop sits on screen, and after a moment a cat springs up from behind it. Click the cat and it asks your questions one at a time, as multiple choice or as a typed answer. The cat looks puzzled while you think, happy when you are right and sad when you are wrong, then shows the explanation and your final score. Questions are plain data, so you can swap in your own.",
     features: [
-      "Cat springs out from behind the laptop with a bounce, then blinks, twitches an ear and swishes its tail; after the last question it jumps for joy and drops back inside the laptop",
+      "Cat springs out from behind the laptop with a bounce, then blinks, twitches an ear and swishes its tail; after the last question it waves goodbye with its paw",
       "Click the cat (or the Ask me button) to start; questions come one at a time with a progress count",
       "Multiple choice with a correct answer, opinion questions with no right answer, or typed answers",
       "Cat moods: puzzled while asking, happy on a correct answer, sad on a wrong one",
