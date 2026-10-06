@@ -3,6 +3,7 @@ import FocusTimerButton from "@/showcase/focus-timer-button";
 import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
+import CatMouseDuel from "@/showcase/cat-mouse-duel";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -210,7 +211,7 @@ export default function Page() {
     name: "Laptop Cat Quiz",
     type: "card",
     week: 2,
-    description: "A cat pops out of a laptop. Click it and it asks you questions one by one, reacts to your answers and scores you.",
+    description: "A cat pops out of a laptop. Click it and it asks you questions one by one, reacts to your answers and waves goodbye.",
     Component: LaptopCatQuiz,
     previewScale: 0.5,
     date: "2026-10-06",
@@ -260,6 +261,60 @@ export default function Onboarding() {
         { id: "b", question: "What do you want to learn next?", placeholder: "e.g. Next.js" },
       ]}
       onComplete={(r) => console.log(r.score, "/", r.total)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "cat-mouse-duel",
+    name: "Cat vs Mouse Duel",
+    type: "section",
+    week: 3,
+    description: "Pick the cat or the mouse, and an AI plays the other one in a quick three-heart fight.",
+    Component: CatMouseDuel,
+    previewProps: { defaultSide: "cat" },
+    previewScale: 0.55,
+    date: "2026-10-06",
+    summary:
+      "A tiny fighting game. First you choose your fighter: play as the cat and the AI controls the mouse, or play as the mouse and the AI controls the cat. Then you trade moves round by round. Every move beats one move and loses to another, so you have to guess what the AI will do. The winner of a round lunges and the other fighter loses a heart. Empty the other side's hearts first and you win.",
+    features: [
+      "Side picker: play as the cat (AI is the mouse) or as the mouse (AI is the cat)",
+      "Three moves in a rock-paper-scissors triangle, with themed names per side (Scratch, Pounce, Leap away for the cat; Bite, Trap, Scurry for the mouse)",
+      "AI opponent that sometimes reads your last move; difficulty easy, normal or hard",
+      "Hearts for each fighter, a lunge and hit burst on every won round, a clash ring when both pick the same move",
+      "Knocked-out fighter falls over with X eyes while the winner cheers",
+      "Round log announces what happened, in a live region for screen readers",
+      "Play again with the same side, or change side",
+      "Typed props for starting side, hit points, difficulty, title and callbacks; disabled and loading states; visible focus; reduced-motion support",
+      "Responsive up to 420px wide with no overflow down to 280px",
+    ],
+    howToUse: [
+      "Press Play as Cat or Play as Mouse.",
+      "Each round pick one of three moves. The hint under each button says which move it beats.",
+      "Win a round to take a heart from the AI; lose one and you lose a heart.",
+      "When one side is out of hearts the fight ends. Press Play again or Change side.",
+    ],
+    tech: ["React", "Tailwind CSS", "TypeScript", "SVG", "CSS animations"],
+    props: [
+      { name: "defaultSide", type: '"cat" | "mouse"', default: "-", description: "Skip the side picker and start as this side." },
+      { name: "hp", type: "number", default: "3", description: "Hearts each fighter starts with." },
+      { name: "difficulty", type: '"easy" | "normal" | "hard"', default: '"normal"', description: "How often the AI reads your last move." },
+      { name: "title", type: "string", default: '"Cat vs Mouse"', description: "Heading of the card." },
+      { name: "onRound", type: "(info) => void", default: "-", description: "Called after every round with { player, ai, outcome }." },
+      { name: "onFinish", type: "(result: DuelResult) => void", default: "-", description: "Called once with { side, won, playerHp, aiHp, rounds } when the fight ends." },
+      { name: "disabled", type: "boolean", default: "false", description: "Lock every button." },
+      { name: "loading", type: "boolean", default: "false", description: "Show a skeleton instead of the game." },
+      { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
+    ],
+    usage: `import CatMouseDuel from "@/showcase/cat-mouse-duel";
+
+export default function Arcade() {
+  return (
+    <CatMouseDuel
+      title="Cat vs Mouse"
+      hp={5}
+      difficulty="hard"
+      onFinish={(r) => console.log(r.won ? "You won" : "You lost", "in", r.rounds, "rounds")}
     />
   );
 }`,
