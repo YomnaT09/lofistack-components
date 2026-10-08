@@ -39,20 +39,20 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      <Link href="/" className="text-sm text-white/50 transition hover:text-white">
+      <Link href="/" className="text-sm text-ink/50 transition hover:text-ink">
         ← All components
       </Link>
 
-      <p className="mt-6 text-sm text-indigo-300">Week {wk} · {date}</p>
+      <p className="mt-6 text-sm text-acc2">Week {wk} · {date}</p>
       <div className="mt-1 flex flex-wrap items-center gap-3">
-        <h1 className="bg-gradient-to-r from-white to-indigo-300 bg-clip-text text-4xl font-semibold tracking-tight text-transparent">
+        <h1 className="bg-gradient-to-r from-ink to-acc2 bg-clip-text text-4xl font-semibold tracking-tight text-transparent">
           {name}
         </h1>
-        <span className="rounded-full border border-indigo-400/40 bg-indigo-400/10 px-2.5 py-0.5 text-xs text-indigo-200">{type}</span>
+        <span className="rounded-full border border-acc2/40 bg-acc2/10 px-2.5 py-0.5 text-xs text-acc2">{type}</span>
       </div>
-      <p className="mt-3 max-w-2xl text-lg leading-relaxed text-white/65">{summary}</p>
+      <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink/65">{summary}</p>
 
-      <div className="relative mt-8 flex min-h-[420px] sm:min-h-[460px] items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(ellipse_at_top,#2a2468_0%,#0b0b1c_60%)] p-3 sm:p-8">
+      <div className="relative mt-8 flex min-h-[420px] sm:min-h-[460px] items-center justify-center overflow-hidden rounded-3xl border border-acc1/30 bg-[radial-gradient(ellipse_at_top,#2a2468_0%,#0b0b1c_60%)] p-3 sm:p-8">
         <div
           aria-hidden
           className="absolute inset-0 opacity-30"
@@ -68,11 +68,11 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
       </div>
 
       <h2 className="mb-4 mt-12 text-xl font-semibold">Details</h2>
-      <dl className="grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2">
+      <dl className="grid gap-px overflow-hidden rounded-2xl border border-ink/10 bg-ink/10 sm:grid-cols-2">
         {details.map(([k, v]) => (
-          <div key={k} className="flex items-baseline justify-between gap-4 bg-[#0b0b14] px-4 py-3">
-            <dt className="text-sm text-white/45">{k}</dt>
-            <dd className="text-right text-sm font-medium text-white/90">{v}</dd>
+          <div key={k} className="flex items-baseline justify-between gap-4 bg-page px-4 py-3">
+            <dt className="text-sm text-ink/45">{k}</dt>
+            <dd className="text-right text-sm font-medium text-ink/90">{v}</dd>
           </div>
         ))}
       </dl>
@@ -80,10 +80,10 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
       <div className="mt-8 grid gap-8 md:grid-cols-2">
         <section>
           <h3 className="mb-3 font-semibold">What it does</h3>
-          <ul className="space-y-2 text-sm text-white/65">
+          <ul className="space-y-2 text-sm text-ink/65">
             {features.map((f) => (
               <li key={f} className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-acc1" />
                 {f}
               </li>
             ))}
@@ -91,10 +91,10 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
         </section>
         <section>
           <h3 className="mb-3 font-semibold">How to use it</h3>
-          <ol className="space-y-2 text-sm text-white/65">
+          <ol className="space-y-2 text-sm text-ink/65">
             {howToUse.map((h, i) => (
               <li key={h} className="flex gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] text-white/80">{i + 1}</span>
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink/10 text-[11px] text-ink/80">{i + 1}</span>
                 {h}
               </li>
             ))}
@@ -106,9 +106,9 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
       <CodeViewer code={usage} filename="Example.tsx" href={`${REPO}/blob/main/src/showcase/${files[0]}`} defaultOpen />
 
       <h2 className="mb-4 mt-12 text-xl font-semibold">Props</h2>
-      <div className="overflow-x-auto rounded-2xl border border-white/10">
+      <div className="overflow-x-auto rounded-2xl border border-ink/10">
         <table className="w-full min-w-[560px] border-collapse text-left text-sm">
-          <thead className="bg-white/[0.04] text-white/70">
+          <thead className="bg-ink/[0.04] text-ink/70">
             <tr>
               <th scope="col" className="px-4 py-3 font-medium">Prop</th>
               <th scope="col" className="px-4 py-3 font-medium">Type</th>
@@ -116,13 +116,13 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
               <th scope="col" className="px-4 py-3 font-medium">Description</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+          <tbody className="divide-y divide-ink/10">
             {props.map((p) => (
               <tr key={p.name} className="align-top">
-                <td className="px-4 py-3 font-mono text-[13px] text-indigo-200">{p.name}</td>
-                <td className="px-4 py-3 font-mono text-[12px] text-white/75">{p.type}</td>
-                <td className="px-4 py-3 font-mono text-[12px] text-white/75">{p.default}</td>
-                <td className="px-4 py-3 text-white/75">{p.description}</td>
+                <td className="px-4 py-3 font-mono text-[13px] text-acc2">{p.name}</td>
+                <td className="px-4 py-3 font-mono text-[12px] text-ink/75">{p.type}</td>
+                <td className="px-4 py-3 font-mono text-[12px] text-ink/75">{p.default}</td>
+                <td className="px-4 py-3 text-ink/75">{p.description}</td>
               </tr>
             ))}
           </tbody>
@@ -136,16 +136,16 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
         ))}
       </div>
 
-      <nav className="mt-12 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-2">
+      <nav className="mt-12 grid gap-4 border-t border-ink/10 pt-6 sm:grid-cols-2">
         {prev ? (
-          <Link href={`/components/${prev.slug}`} className="rounded-xl border border-white/10 p-4 transition hover:border-indigo-400/50">
-            <span className="text-xs text-white/40">← Previous</span>
+          <Link href={`/components/${prev.slug}`} className="rounded-xl border border-ink/10 p-4 transition hover:border-acc2/60">
+            <span className="text-xs text-ink/40">← Previous</span>
             <span className="mt-1 block font-medium">{prev.name}</span>
           </Link>
         ) : <span />}
         {next ? (
-          <Link href={`/components/${next.slug}`} className="rounded-xl border border-white/10 p-4 text-right transition hover:border-indigo-400/50">
-            <span className="text-xs text-white/40">Next →</span>
+          <Link href={`/components/${next.slug}`} className="rounded-xl border border-ink/10 p-4 text-right transition hover:border-acc2/60">
+            <span className="text-xs text-ink/40">Next →</span>
             <span className="mt-1 block font-medium">{next.name}</span>
           </Link>
         ) : <span />}

@@ -1,12 +1,30 @@
 @import "tailwindcss";
 
-/* Neon accents: acc1 is the main colour, acc2 the second one. "soft" is the light shade used for text. */
+/* Neon accents: acc1 is the main colour, acc2 the second one. "soft" is the light shade used for text.
+   ink/page/surface flip with the theme; glow scales the neon shadows (weaker on the light theme). */
 :root {
   --acc1: 34 211 238;
   --acc1-soft: 165 243 252;
   --acc2: 139 92 246;
   --acc2-soft: 221 214 254;
   --on-acc2: 255 255 255; /* text colour on top of acc2 */
+  --ink: 231 231 239;
+  --page: 5 5 12;
+  --surface: 0 0 0;
+  --glow: 1;
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  --acc1: 8 145 178;
+  --acc1-soft: 21 94 117;
+  --acc2: 109 40 217;
+  --acc2-soft: 91 33 182;
+  --ink: 15 23 42;
+  --page: 244 247 251;
+  --surface: 255 255 255;
+  --glow: 0.3;
+  color-scheme: light;
 }
 
 @theme {
@@ -14,14 +32,13 @@
   --color-acc1-soft: rgb(var(--acc1-soft));
   --color-acc2: rgb(var(--acc2));
   --color-acc2-soft: rgb(var(--acc2-soft));
-}
-
-:root {
-  color-scheme: dark;
+  --color-ink: rgb(var(--ink));
+  --color-page: rgb(var(--page));
+  --color-surface: rgb(var(--surface));
 }
 
 body {
   font-family: var(--font-lexend), system-ui, sans-serif;
-  background: #05050c;
-  color: #e7e7ef;
+  background: rgb(var(--page));
+  color: rgb(var(--ink));
 }
