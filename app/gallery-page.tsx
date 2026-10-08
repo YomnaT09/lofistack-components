@@ -8,9 +8,9 @@ const TOTAL = 30;
 function Background() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-x-0 top-0 h-[620px] bg-[linear-gradient(rgba(34,211,238,.1)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.1)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-      <div className="absolute -left-20 top-0 h-[380px] w-[380px] rounded-full bg-cyan-500/20 blur-[110px]" />
-      <div className="absolute -right-20 top-24 h-[380px] w-[380px] rounded-full bg-pink-600/25 blur-[110px]" />
+      <div className="absolute inset-x-0 top-0 h-[620px] bg-[linear-gradient(rgb(var(--acc1)/.1)_1px,transparent_1px),linear-gradient(90deg,rgb(var(--acc1)/.1)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+      <div className="absolute -left-20 top-0 h-[380px] w-[380px] rounded-full bg-acc1/20 blur-[110px]" />
+      <div className="absolute -right-20 top-24 h-[380px] w-[380px] rounded-full bg-acc2/25 blur-[110px]" />
     </div>
   );
 }

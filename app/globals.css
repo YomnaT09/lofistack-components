@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Neon accents: acc1 is the main colour, acc2 the second one. "soft" is the light shade used for text. */
+:root {
+  --acc1: 34 211 238;
+  --acc1-soft: 165 243 252;
+  --acc2: 236 72 153;
+  --acc2-soft: 251 207 232;
+  --on-acc2: 255 255 255; /* text colour on top of acc2 */
+}
+
+@theme {
+  --color-acc1: rgb(var(--acc1));
+  --color-acc1-soft: rgb(var(--acc1-soft));
+  --color-acc2: rgb(var(--acc2));
+  --color-acc2-soft: rgb(var(--acc2-soft));
+}
+
 :root {
   color-scheme: dark;
 }

@@ -21,13 +21,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={lexend.variable}>
       <body className="min-h-screen antialiased">
-        <header className="sticky top-0 z-40 border-b border-cyan-400/40 bg-[#05050c]/90 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 border-b border-acc1/40 bg-[#05050c]/90 backdrop-blur-xl">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
             <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-300">
-              <span aria-hidden className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-cyan-300 to-pink-500 shadow-[0_0_14px_rgba(34,211,238,.9)]" />
+              <span aria-hidden className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-acc1 to-acc2 shadow-[0_0_14px_rgb(var(--acc1)/.9)]" />
               LofiStack Gallery
             </Link>
-            <span className="hidden rounded-sm border border-pink-400/60 px-3 py-1 font-mono text-xs uppercase text-pink-200 sm:inline">90 day build challenge</span>
+            <span className="hidden rounded-sm border border-acc2/60 px-3 py-1 font-mono text-xs uppercase text-acc2-soft sm:inline">90 day build challenge</span>
           </div>
         </header>
         {children}
