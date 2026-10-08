@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { registry } from "@/lib/registry";
 import { REPO } from "@/lib/source";
 import GalleryGrid from "./gallery-grid";
@@ -6,33 +5,17 @@ import { THEMES, type GalleryVariant } from "./themes";
 
 const TOTAL = 30;
 
-function Background({ variant }: { variant: GalleryVariant }) {
-  if (variant === "neon")
-    return (
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 top-0 h-[620px] bg-[linear-gradient(rgba(34,211,238,.1)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.1)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-        <div className="absolute -left-20 top-0 h-[380px] w-[380px] rounded-full bg-cyan-500/20 blur-[110px]" />
-        <div className="absolute -right-20 top-24 h-[380px] w-[380px] rounded-full bg-pink-600/25 blur-[110px]" />
-      </div>
-    );
-  if (variant === "paper")
-    return (
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 -top-24 h-[420px] w-[420px] rounded-full bg-violet-300/40 blur-[110px]" />
-        <div className="absolute -right-24 top-10 h-[360px] w-[360px] rounded-full bg-pink-300/40 blur-[110px]" />
-        <div className="absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(rgba(109,40,217,.12)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-      </div>
-    );
+function Background() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      <div className="absolute -left-32 -top-24 h-[420px] w-[420px] rounded-full bg-indigo-600/30 blur-[120px]" />
-      <div className="absolute -right-24 top-10 h-[360px] w-[360px] rounded-full bg-fuchsia-600/20 blur-[120px]" />
-      <div className="absolute inset-x-0 top-0 h-[560px] bg-[linear-gradient(rgba(255,255,255,.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+      <div className="absolute inset-x-0 top-0 h-[620px] bg-[linear-gradient(rgba(34,211,238,.1)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,.1)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
+      <div className="absolute -left-20 top-0 h-[380px] w-[380px] rounded-full bg-cyan-500/20 blur-[110px]" />
+      <div className="absolute -right-20 top-24 h-[380px] w-[380px] rounded-full bg-pink-600/25 blur-[110px]" />
     </div>
   );
 }
 
-export default function GalleryPage({ variant }: { variant: GalleryVariant }) {
+export default function GalleryPage({ variant = "neon" }: { variant?: GalleryVariant }) {
   const t = THEMES[variant];
   const built = registry.length;
   const types = new Set(registry.map((c) => c.type)).size;
@@ -43,23 +26,9 @@ export default function GalleryPage({ variant }: { variant: GalleryVariant }) {
     { label: "Different types", value: String(types) },
     { label: "Weeks so far", value: String(weeks) },
   ];
-  const own = variant !== "aurora"; // the other looks bring their own header, so hide the shared one
-
   return (
     <main className={`relative min-h-screen overflow-hidden ${t.root}`}>
-      {own && <style>{`body > header { display: none }${variant === "paper" ? " body { background: #f6f2ff }" : variant === "neon" ? " body { background: #05050c }" : ""}`}</style>}
-      {own && (
-        <header className={`sticky top-0 z-40 border-b backdrop-blur-xl ${t.header}`}>
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-            <Link href="/" className={`flex items-center gap-2.5 font-semibold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${t.focus}`}>
-              <span aria-hidden className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-indigo-400 to-fuchsia-500" />
-              LofiStack Gallery
-            </Link>
-            <span className={`hidden border px-3 py-1 text-xs sm:inline ${t.headerPill}`}>90 day build challenge</span>
-          </div>
-        </header>
-      )}
-      <Background variant={variant} />
+      <Background />
 
       <section className="relative mx-auto max-w-6xl px-6 pb-10 pt-16 sm:pt-24">
         <p className={`inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium ${t.eyebrow}`}>

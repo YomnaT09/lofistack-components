@@ -19,7 +19,7 @@ const TYPE_STYLE: Record<ComponentType_, { badge: string; dot: string }> = {
   input: { badge: "border-teal-400/40 bg-teal-400/10 text-teal-200", dot: "bg-teal-400" },
 };
 
-export default function GalleryGrid({ variant = "aurora" }: { variant?: GalleryVariant }) {
+export default function GalleryGrid({ variant = "neon" }: { variant?: GalleryVariant }) {
   const t = THEMES[variant];
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ComponentType_ | "all">("all");
@@ -37,7 +37,7 @@ export default function GalleryGrid({ variant = "aurora" }: { variant?: GalleryV
 
   const chip = (active: boolean) =>
     `inline-flex items-center gap-1.5 border px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${t.focus} ${
-      variant === "aurora" || variant === "paper" ? "rounded-full" : ""
+      ""
     } ${active ? t.chipOn : t.chipOff}`;
 
   return (
