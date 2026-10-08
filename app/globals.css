@@ -3,11 +3,11 @@
 /* Neon accents: acc1 is the main colour, acc2 the second one. "soft" is the light shade used for text.
    ink/page/surface flip with the theme; glow scales the neon shadows (weaker on the light theme). */
 :root {
-  --acc1: 34 211 238;
-  --acc1-soft: 165 243 252;
-  --acc2: 139 92 246;
-  --acc2-soft: 221 214 254;
-  --on-acc2: 255 255 255; /* text colour on top of acc2 */
+  --acc1: 251 113 133;
+  --acc1-soft: 254 205 211;
+  --acc2: 56 189 248;
+  --acc2-soft: 186 230 253;
+  --on-acc2: 20 20 20; /* text colour on top of acc2 */
   --ink: 231 231 239;
   --page: 5 5 12;
   --surface: 0 0 0;
@@ -16,10 +16,11 @@
 }
 
 html[data-theme="light"] {
-  --acc1: 8 145 178;
-  --acc1-soft: 21 94 117;
-  --acc2: 109 40 217;
-  --acc2-soft: 91 33 182;
+  --acc1: 225 29 72;
+  --acc1-soft: 159 18 57;
+  --acc2: 2 132 199;
+  --acc2-soft: 3 105 161;
+  --on-acc2: 255 255 255;
   --ink: 15 23 42;
   --page: 244 247 251;
   --surface: 255 255 255;

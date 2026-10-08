@@ -57,7 +57,7 @@ export const THEMES: Record<GalleryVariant, GalleryTheme> = {
     h2: "font-mono uppercase tracking-widest text-acc1-soft",
     chipOn: "border-acc2 bg-acc2 text-[rgb(var(--on-acc2))] rounded-md font-mono uppercase tracking-wider",
     chipOff: "border-acc1/50 bg-surface/50 text-acc1-soft hover:bg-acc1/10 rounded-md font-mono uppercase tracking-wider",
-    chipCount: ["text-acc2-soft", "text-acc1-soft/70"],
+    chipCount: ["text-[rgb(var(--on-acc2))]/80", "text-acc1-soft/70"],
     search: "rounded-md border-2 border-acc1/50 bg-surface/60 font-mono text-acc1-soft placeholder:text-acc1-soft/60",
     muted: "text-acc1-soft/70 font-mono",
     card: "rounded-xl border-2 border-acc1/60 bg-surface/60 shadow-[0_0_0_1px_rgb(var(--acc2)/.35),0_0_30px_-10px_rgb(var(--acc1)/calc(.7*var(--glow)))] hover:-translate-y-1 hover:border-acc2 hover:shadow-[0_0_0_1px_rgb(var(--acc2)/.8),0_0_44px_-6px_rgb(var(--acc2)/.75)]",
