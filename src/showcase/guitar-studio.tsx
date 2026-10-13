@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type GuitarMode = "play" | "chords" | "tuner" | "tab" | "strum";
+export type GuitarMode = "play" | "chords" | "tuner" | "tab" | "strum" | "song";
+
+export type StrumStyle = "folk" | "pop" | "slow" | "finger";
+
+export interface GuitarSong {
+  name: string;
+  /** Up to 8 bars. Each bar is a chord name, or null for an empty bar. */
+  bars: (string | null)[];
+  style: StrumStyle;
+  tempo: number;
+}
 
 export interface GuitarChord {
   name: string;
@@ -24,6 +34,10 @@ export interface GuitarStudioProps {
   tab?: TabNote[][];
   /** Beats per minute for Tab and Strum. */
   tempo?: number;
+  /** Example songs shown in the Song tab. */
+  songs?: GuitarSong[];
+  /** localStorage key for songs saved from the Song tab. */
+  storageKey?: string;
   muted?: boolean;
   disabled?: boolean;
   /** Called every time a string sounds. */
@@ -37,6 +51,7 @@ const MODES: { id: GuitarMode; label: string }[] = [
   { id: "tuner", label: "Tuner" },
   { id: "tab", label: "Tab" },
   { id: "strum", label: "Strum" },
+  { id: "song", label: "Song" },
 ];
 
 const OPEN = [82.41, 110, 146.83, 196, 246.94, 329.63]; // E2 A2 D3 G3 B3 E4
@@ -49,6 +64,21 @@ const DEFAULT_CHORDS: GuitarChord[] = [
   { name: "Em", frets: [0, 2, 2, 0, 0, 0] },
   { name: "D", frets: [-1, -1, 0, 2, 3, 2] },
   { name: "E", frets: [0, 2, 2, 1, 0, 0] },
+  { name: "F", frets: [1, 3, 3, 2, 1, 1] },
+  { name: "Dm", frets: [-1, -1, 0, 2, 3, 1] },
+];
+
+const DEFAULT_SONGS: GuitarSong[] = [
+  { name: "Lofi Sunday", bars: ["Am", "F", "C", "G", "Am", "F", "C", "G"], style: "folk", tempo: 84 },
+  { name: "Campfire", bars: ["G", "C", "G", "D", "G", "C", "D", "G"], style: "pop", tempo: 100 },
+  { name: "Sad Cat", bars: ["Am", "Dm", "Em", "Am", "F", "Dm", "E", "Am"], style: "slow", tempo: 70 },
+];
+
+const STYLES: { id: StrumStyle; label: string; slots: ("D" | "U" | "-")[] }[] = [
+  { id: "folk", label: "Folk", slots: ["D", "-", "D", "U", "-", "U", "D", "U"] },
+  { id: "pop", label: "Pop", slots: ["D", "-", "D", "U", "D", "U", "D", "U"] },
+  { id: "slow", label: "Slow", slots: ["D", "-", "-", "-", "D", "-", "U", "-"] },
+  { id: "finger", label: "Fingerpick", slots: ["D", "D", "D", "D", "D", "D", "D", "D"] },
 ];
 
 const DEFAULT_TAB: TabNote[][] = [
@@ -138,6 +168,8 @@ export default function GuitarStudio({
   defaultChord,
   tab = DEFAULT_TAB,
   tempo = 90,
+  songs = DEFAULT_SONGS,
+  storageKey = "guitar-studio:songs",
   muted = false,
   disabled = false,
   onPluck,
@@ -156,6 +188,13 @@ export default function GuitarStudio({
   const [strumStep, setStrumStep] = useState(-1);
   const [strumOn, setStrumOn] = useState(false);
   const [note, setNote] = useState("");
+  const [bars, setBars] = useState<(string | null)[]>(() => [...(songs[0]?.bars ?? []), ...Array(8).fill(null)].slice(0, 8));
+  const [songName, setSongName] = useState(songs[0]?.name ?? "My song");
+  const [style, setStyle] = useState<StrumStyle>(songs[0]?.style ?? "folk");
+  const [selBar, setSelBar] = useState<number | null>(null);
+  const [songOn, setSongOn] = useState(false);
+  const [songBar, setSongBar] = useState(-1);
+  const [saved, setSaved] = useState<GuitarSong[]>([]);
   const audio = useRef<Audio | null>(null);
   const timers = useRef<number[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -166,11 +205,22 @@ export default function GuitarStudio({
   callbackRef.current = onPluck;
 
   const chord = chords.find((c) => c.name === chordName) ?? chords[0];
+  const barChord = songBar >= 0 ? chords.find((c) => c.name === bars[songBar]) : undefined;
+  const activeChord = mode === "song" && barChord ? barChord : chord;
 
   const later = (fn: () => void, ms: number) => {
     const id = window.setTimeout(fn, ms);
     timers.current.push(id);
   };
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setSaved(JSON.parse(raw));
+    } catch {
+      /* storage can be blocked; saving then lasts for this visit only */
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     const t = timers;
@@ -252,8 +302,8 @@ export default function GuitarStudio({
     }
     if (s === lastString.current) return;
     lastString.current = s;
-    const fret = mode === "play" ? fretFromX(x) : chord.frets[s] < 0 ? 0 : chord.frets[s];
-    if (mode !== "play" && chord.frets[s] < 0) return;
+    const fret = mode === "play" ? fretFromX(x) : activeChord.frets[s] < 0 ? 0 : activeChord.frets[s];
+    if (mode !== "play" && activeChord.frets[s] < 0) return;
     pluck(s, fret);
     setPressed({ s, f: fret });
     setNote(`${NAMES[s]} string, ${fret === 0 ? "open" : `fret ${fret}`}`);
@@ -290,8 +340,86 @@ export default function GuitarStudio({
     return () => clearInterval(id);
   }, [strumOn, bpm, pattern, chord, strum]);
 
+  // ---------- Song player: one bar = 8 eighth-note slots ----------
+  useEffect(() => {
+    if (!songOn) return;
+    const filled = bars.map((c, i) => ({ c: chords.find((x) => x.name === c), i })).filter((x) => x.c);
+    if (!filled.length) {
+      setSongOn(false);
+      return;
+    }
+    const pat = STYLES.find((x) => x.id === style)!.slots;
+    const ms = 60000 / bpm / 2;
+    let step = 0;
+    const tick = () => {
+      const { c, i } = filled[Math.floor(step / 8) % filled.length];
+      const ch = c!;
+      const slot = step % 8;
+      setSongBar(i);
+      if (style === "finger") {
+        const live = [0, 1, 2, 3, 4, 5].filter((s) => ch.frets[s] >= 0);
+        const order = [0, 2, 3, 4, 3, 2, 3, 4]; // bass note first, then the higher strings
+        const pick = live.length ? live[Math.min(order[slot], live.length - 1)] : -1;
+        if (pick >= 0) pluck(pick, ch.frets[pick], true);
+      } else if (pat[slot] !== "-") {
+        strum(ch, pat[slot] as "D" | "U");
+      }
+      step++;
+    };
+    tick();
+    const id = window.setInterval(tick, ms);
+    return () => clearInterval(id);
+  }, [songOn, bars, bpm, style, chords, pluck, strum]);
+
+  const addChord = (name: string) => {
+    const target = selBar !== null ? selBar : bars.findIndex((b) => b === null);
+    if (target < 0) {
+      setNote("All 8 bars are full. Pick a bar to change it.");
+      return;
+    }
+    setBars((b) => b.map((v, i) => (i === target ? name : v)));
+    setSelBar(null);
+    const ch = chords.find((c) => c.name === name);
+    if (ch && !songOn) strum(ch, "D");
+  };
+  const clearBar = (i: number) => {
+    setBars((b) => b.map((v, j) => (j === i ? null : v)));
+    setSelBar(null);
+  };
+  const loadSong = (song: GuitarSong) => {
+    setSongOn(false);
+    setSongBar(-1);
+    setBars([...song.bars, ...Array(8).fill(null)].slice(0, 8));
+    setSongName(song.name);
+    setStyle(song.style);
+    setBpm(song.tempo);
+    setSelBar(null);
+  };
+  const saveSong = () => {
+    const name = songName.trim() || "My song";
+    const next = [...saved.filter((x) => x.name !== name), { name, bars, style, tempo: bpm }];
+    setSaved(next);
+    setNote(`Saved ${name}`);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    } catch {
+      /* storage can be blocked */
+    }
+  };
+  const removeSaved = (name: string) => {
+    const next = saved.filter((x) => x.name !== name);
+    setSaved(next);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    } catch {
+      /* storage can be blocked */
+    }
+  };
+
   const pickMode = (m: GuitarMode) => {
     setMode(m);
+    setSongOn(false);
+    setSongBar(-1);
     setTabOn(false);
     setStrumOn(false);
     setTabStep(-1);
@@ -299,9 +427,9 @@ export default function GuitarStudio({
     setPressed(null);
   };
 
-  const showChord = mode === "chords" || mode === "strum";
+  const showChord = mode === "chords" || mode === "strum" || (mode === "song" && songBar >= 0);
   const dots: { s: number; f: number }[] = showChord
-    ? chord.frets.map((f, s) => ({ s, f })).filter((d) => d.f > 0)
+    ? activeChord.frets.map((f, s) => ({ s, f })).filter((d) => d.f > 0)
     : mode === "tab" && tabStep >= 0
       ? tab[tabStep].map((n) => ({ s: n.string, f: n.fret })).filter((d) => d.f > 0)
       : pressed && pressed.f > 0
@@ -364,7 +492,7 @@ export default function GuitarStudio({
             return <circle key={`${d.s}-${d.f}-${i}`} cx={x} cy={stringY(d.s, x)} r="8.5" fill="#fb7185" stroke="#fff" strokeOpacity=".7" strokeWidth="1.4" filter="url(#gst-glow)" />;
           })}
           {showChord &&
-            chord.frets.map((f, s) =>
+            activeChord.frets.map((f, s) =>
               f <= 0 ? (
                 <text key={s} x="112" y={stringY(s, X0) + 4} textAnchor="middle" fontSize="12" fontFamily="ui-monospace,monospace" fill="#cbd2e6">{f < 0 ? "x" : "o"}</text>
               ) : null,
@@ -429,6 +557,69 @@ export default function GuitarStudio({
               <Tempo bpm={bpm} setBpm={setBpm} />
             </div>
           </>
+        )}
+        {mode === "song" && (
+          <div className="gst-song">
+            <div className="gst-songhead">
+              <input className="gst-name" aria-label="Song name" value={songName} maxLength={28} onChange={(e) => setSongName(e.target.value)} disabled={disabled} />
+              <span className="gst-meta">{bars.filter(Boolean).length} of 8 bars · {bpm} bpm</span>
+            </div>
+            <div className="gst-bars" role="group" aria-label="Song bars">
+              {bars.map((b, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-pressed={selBar === i}
+                  aria-label={b ? `Bar ${i + 1}: ${b}` : `Bar ${i + 1}: empty`}
+                  className={`gst-bar${b ? "" : " empty"}${songBar === i ? " now" : ""}${selBar === i ? " sel" : ""}`}
+                  disabled={disabled}
+                  onClick={() => setSelBar((v) => (v === i ? null : i))}
+                >
+                  <small>Bar {i + 1}</small>
+                  <strong>{b ?? "+ add chord"}</strong>
+                </button>
+              ))}
+            </div>
+            <p className="gst-hint">{selBar !== null ? `Bar ${selBar + 1} is selected. Pick a chord to put there.` : "Pick a chord to put it in the next empty bar, or select a bar to change it."}</p>
+            <div className="gst-row" role="group" aria-label="Chords to add">
+              {chords.map((c) => (
+                <button key={c.name} type="button" className="gst-pill" disabled={disabled} onClick={() => addChord(c.name)}>{c.name}</button>
+              ))}
+              {selBar !== null && bars[selBar] && (
+                <button type="button" className="gst-btn" onClick={() => clearBar(selBar)}>Clear bar {selBar + 1}</button>
+              )}
+            </div>
+            <div className="gst-row">
+              <button type="button" className="gst-btn" disabled={disabled || !bars.some(Boolean)} onClick={() => { setSelBar(null); if (songOn) setSongBar(-1); setSongOn((v) => !v); }}>{songOn ? "Stop" : "▶ Play song"}</button>
+              <span className="gst-styles" role="group" aria-label="Strum style">
+                {STYLES.map((st) => (
+                  <button key={st.id} type="button" aria-pressed={style === st.id} className={`gst-pill${style === st.id ? " on" : ""}`} disabled={disabled} onClick={() => setStyle(st.id)}>{st.label}</button>
+                ))}
+              </span>
+              <Tempo bpm={bpm} setBpm={setBpm} />
+            </div>
+            <div className="gst-row">
+              <button type="button" className="gst-btn gst-save" disabled={disabled} onClick={saveSong}>Save</button>
+              <button type="button" className="gst-btn gst-ghost" disabled={disabled} onClick={() => { setBars(Array(8).fill(null)); setSongOn(false); setSongBar(-1); setSelBar(null); }}>Clear all</button>
+            </div>
+            <div className="gst-row" aria-label="Songs">
+              <small className="gst-label">Examples</small>
+              {songs.map((sg) => (
+                <button key={sg.name} type="button" className="gst-pill" disabled={disabled} onClick={() => loadSong(sg)}>{sg.name}</button>
+              ))}
+            </div>
+            {saved.length > 0 && (
+              <div className="gst-row">
+                <small className="gst-label">Saved</small>
+                {saved.map((sg) => (
+                  <span key={sg.name} className="gst-saved">
+                    <button type="button" className="gst-pill" disabled={disabled} onClick={() => loadSong(sg)}>{sg.name}</button>
+                    <button type="button" className="gst-x" aria-label={`Delete ${sg.name}`} onClick={() => removeSaved(sg.name)}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         <p className="gst-sr" role="status">{note}</p>
       </div>
@@ -584,6 +775,22 @@ const CSS = `
 .gst-peg{display:flex;align-items:center;gap:6px;padding:4px;border-radius:10px;border:1px solid transparent}.gst-peg.on{border-color:#2c3158}
 .gst-turn{display:flex;gap:4px}.gst-turn button{width:26px;height:26px;border-radius:7px;border:1px solid #2c3158;background:#161a33;color:#e8ebf5;cursor:pointer}
 .gst-tuner>.gst-btn{grid-column:1/-1;justify-self:start}
+.gst-song{display:flex;flex-direction:column;gap:10px}
+.gst-songhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.gst-name{all:unset;box-sizing:border-box;font-size:17px;font-weight:600;border-bottom:1px dashed #2c3158;min-width:120px;max-width:100%;color:#e8ebf5}
+.gst-name:focus-visible{border-bottom-color:#38bdf8}
+.gst-meta{font:12px ui-monospace,monospace;color:#9aa2b8}
+.gst-bars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.gst-bar{text-align:left;padding:8px 10px;min-height:60px;border-radius:12px;border:1px solid #38bdf8;background:rgba(56,189,248,.1);color:#e8ebf5;font:inherit;cursor:pointer}
+.gst-bar small{display:block;font:11px ui-monospace,monospace;color:#9aa2b8}.gst-bar strong{font-size:19px}
+.gst-bar.empty{border-style:dashed;border-color:#2c3158;background:transparent}.gst-bar.empty strong{font-size:13px;font-weight:400;color:#6b7390}
+.gst-bar.sel{outline:2px solid #a3e635;outline-offset:1px}
+.gst-bar.now{background:#fb7185;border-color:#fb7185;color:#10132a;box-shadow:0 0 16px #fb7185}.gst-bar.now small{color:#4a1c26}
+.gst-styles{display:flex;flex-wrap:wrap;gap:6px}
+.gst-save{border-color:#38bdf8;background:rgba(56,189,248,.16)}.gst-ghost{border-color:#566;background:transparent}
+.gst-label{font:11px ui-monospace,monospace;color:#9aa2b8;text-transform:uppercase;letter-spacing:.06em}
+.gst-saved{display:inline-flex;align-items:center}.gst-x{margin-left:-6px;width:22px;height:22px;border-radius:50%;border:1px solid #2c3158;background:#161a33;color:#cbd2e6;cursor:pointer;line-height:1}
+@media (max-width:560px){.gst-bars{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .gst-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0}
 @media (max-width:560px){.gst-tuner{grid-template-columns:1fr}.gst-tempo{margin-left:0}}
 @media (prefers-reduced-motion:reduce){.gst-vib{animation:none}}
