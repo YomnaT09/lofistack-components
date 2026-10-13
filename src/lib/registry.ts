@@ -4,6 +4,7 @@ import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import CommandPaletteModal from "@/showcase/command-palette-modal";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -307,6 +308,7 @@ export default function Onboarding() {
       { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
     ],
     usage: `import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import CommandPaletteModal from "@/showcase/command-palette-modal";
 
 export default function Arcade() {
   return (
@@ -315,6 +317,62 @@ export default function Arcade() {
       hp={5}
       difficulty="hard"
       onFinish={(r) => console.log(r.won ? "You won" : "You lost", "in", r.rounds, "rounds")}
+    />
+  );
+}`,
+  },
+  {
+    slug: "command-palette-modal",
+    name: "Command Palette Modal",
+    type: "modal",
+    week: 3,
+    description: "Press Ctrl+K to open a searchable list of actions you can run from the keyboard.",
+    Component: CommandPaletteModal,
+    previewScale: 0.9,
+    date: "2026-10-13",
+    summary:
+      "A search-and-run box that floats over the page. Press Ctrl K (or Cmd K) or click the search bar, type a few letters to filter the actions, move with the arrow keys and press Enter to run one. It traps focus while open, closes with Esc or a click outside, and hands focus back to the button when it closes.",
+    features: [
+      "Opens with Ctrl K or Cmd K (key is a prop) or by clicking the search bar; Esc or a click outside closes it",
+      "Live search over each command's label and hint",
+      "Arrow keys wrap around and skip disabled commands; Enter runs the highlighted one; hover also highlights",
+      "Focus is trapped inside while open, page scroll is locked, and focus returns to the opening button",
+      "Combobox and listbox roles with aria-activedescendant, plus a live count of matches for screen readers",
+      "Empty state when nothing matches, loading state with a spinner, and a disabled state",
+      "Typed props for commands, labels, shortcut key and callbacks (onSelect, onOpenChange)",
+      "Responsive: full width on phones, no overflow down to 280px; reduced-motion support",
+    ],
+    howToUse: [
+      "Click the search bar or press Ctrl K (Cmd K on Mac).",
+      "Type to filter the list, for example \"set\".",
+      "Use the up and down arrow keys, then press Enter to run the highlighted command.",
+      "Press Esc or click outside to close without running anything.",
+    ],
+    tech: ["React", "TypeScript", "CSS"],
+    props: [
+      { name: "commands", type: "PaletteCommand[]", default: "4 sample commands", description: "List of { id, label, hint?, shortcut?, disabled? }." },
+      { name: "triggerLabel", type: "string", default: '"Search commands"', description: "Text on the button that opens the palette." },
+      { name: "shortcutKey", type: "string", default: '"k"', description: "Letter that opens it with Ctrl or Cmd. Use an empty string to turn the shortcut off." },
+      { name: "title", type: "string", default: '"Command palette"', description: "Heading of the dialog, also its accessible name." },
+      { name: "placeholder", type: "string", default: '"Type a command..."', description: "Placeholder of the search box." },
+      { name: "emptyText", type: "string", default: '"No command found"', description: "Shown when no command matches." },
+      { name: "onSelect", type: "(command: PaletteCommand) => void", default: "undefined", description: "Called with the command the person picked." },
+      { name: "onOpenChange", type: "(open: boolean) => void", default: "undefined", description: "Called when the palette opens or closes." },
+      { name: "loading", type: "boolean", default: "false", description: "Shows a spinner instead of the list." },
+      { name: "disabled", type: "boolean", default: "false", description: "Disables the button and the shortcut." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import CommandPaletteModal from "@/showcase/command-palette-modal";
+
+export default function Example() {
+  return (
+    <CommandPaletteModal
+      commands={[
+        { id: "new", label: "New note", shortcut: "N" },
+        { id: "theme", label: "Switch theme", hint: "Dark or Default" },
+        { id: "soon", label: "Share (coming soon)", disabled: true },
+      ]}
+      onSelect={(c) => console.log("run", c.id)}
     />
   );
 }`,
