@@ -4,6 +4,7 @@ import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import GuitarStudio from "@/showcase/guitar-studio";
 import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 
 export type ComponentType_ =
@@ -308,6 +309,7 @@ export default function Onboarding() {
       { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
     ],
     usage: `import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import GuitarStudio from "@/showcase/guitar-studio";
 import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 
 export default function Arcade() {
@@ -376,6 +378,60 @@ export default function Example({ stage, error }: { stage: number; error: boolea
       current={stage}
       failedIndex={error ? stage : null}
       onRetry={() => console.log("retry")}
+    />
+  );
+}`,
+  },
+  {
+    slug: "guitar-studio",
+    name: "Guitar Studio",
+    type: "card",
+    week: 4,
+    description: "A playable acoustic guitar with chords, a tuner, a tab player and a strum pattern, all with real plucked-string sound.",
+    Component: GuitarStudio,
+    previewScale: 0.4,
+    previewWidth: 800,
+    date: "2026-10-14",
+    summary:
+      "A drawn acoustic guitar you can actually play. Press a spot on the neck to sound that fret, or drag across the strings to strum. The sound is made in the browser by simulating a plucked string, so there are no audio files. Five tabs turn it into a small studio: free play, a chord library, a tuner you can detune and tune back, a scrolling tab with a playhead, and a looping strum pattern.",
+    features: [
+      "Realistic drawing: wood grain top, rosette soundhole, headstock with tuners, silver frets, pearl markers, and thick wound strings against thin plain ones",
+      "Plucked-string sound made with the Web Audio API (Karplus-Strong), with a different pitch for every string and fret, plus a soft wood body tone",
+      "Strings wobble and fade out when played; drag across the neck to strum, press a fret region to play that note",
+      "Chords tab: Am, C, G, Em, D and E with finger dots, muted (x) and open (o) marks, and Strum down or up that sweeps across the strings",
+      "Tuner tab: a needle gauge, Detune strings, and − / + to turn each string back to In tune",
+      "Tab tab: a 16-step fingerpicking tab with a moving playhead and a tempo slider",
+      "Strum tab: an 8-slot down, up or rest pattern that loops on the chosen chord",
+      "Typed props for chords, tab, tempo, sound on or off and an onPluck callback; disabled state; keyboard-reachable buttons and a live note announcement",
+      "Responsive: the neck scrolls sideways inside the card on phones, no page overflow down to 280px; reduced-motion support",
+    ],
+    howToUse: [
+      "Press the Play tab and click a spot on the neck, or drag across the strings.",
+      "Open Chords, pick a chord and press Strum down.",
+      "Open Tuner, press Detune strings, then use − and + until the needle says In tune.",
+      "Open Tab or Strum and press Play. Change the tempo with the slider.",
+    ],
+    tech: ["React", "TypeScript", "SVG", "Web Audio API"],
+    props: [
+      { name: "defaultMode", type: '"play" | "chords" | "tuner" | "tab" | "strum"', default: '"play"', description: "Which tab opens first." },
+      { name: "chords", type: "GuitarChord[]", default: "6 sample chords", description: "List of { name, frets } with frets from low E to high e (-1 muted, 0 open)." },
+      { name: "defaultChord", type: "string", default: "first chord", description: "Chord selected at the start." },
+      { name: "tab", type: "TabNote[][]", default: "16-step sample", description: "Steps for the tab player; each step is a list of { string, fret }." },
+      { name: "tempo", type: "number", default: "90", description: "Beats per minute for Tab and Strum." },
+      { name: "muted", type: "boolean", default: "false", description: "Keep the animation but turn the sound off." },
+      { name: "disabled", type: "boolean", default: "false", description: "Disable every control." },
+      { name: "onPluck", type: "({ string, fret, frequency }) => void", default: "undefined", description: "Called every time a string sounds." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import GuitarStudio from "@/showcase/guitar-studio";
+
+export default function Example() {
+  return (
+    <GuitarStudio
+      defaultMode="chords"
+      defaultChord="G"
+      tempo={80}
+      onPluck={({ string, fret }) => console.log(string, fret)}
     />
   );
 }`,
