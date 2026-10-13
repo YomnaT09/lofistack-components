@@ -4,6 +4,7 @@ import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import AnimatedDonutChart from "@/showcase/animated-donut-chart";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -307,6 +308,7 @@ export default function Onboarding() {
       { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
     ],
     usage: `import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import AnimatedDonutChart from "@/showcase/animated-donut-chart";
 
 export default function Arcade() {
   return (
@@ -315,6 +317,63 @@ export default function Arcade() {
       hp={5}
       difficulty="hard"
       onFinish={(r) => console.log(r.won ? "You won" : "You lost", "in", r.rounds, "rounds")}
+    />
+  );
+}`,
+  },
+  {
+    slug: "animated-donut-chart",
+    name: "Animated Donut Stat Chart",
+    type: "chart",
+    week: 3,
+    description: "A donut chart that draws itself in, with hover highlights and a legend that hides segments.",
+    Component: AnimatedDonutChart,
+    previewScale: 0.8,
+    date: "2026-10-13",
+    summary:
+      "A donut chart for showing how a total is split. The segments grow in one after another when it appears. Hover a segment (or a legend row) to highlight it and see its share in the centre. Click a legend row to hide a segment, and the rest re-divide the ring and the total updates.",
+    features: [
+      "Segments draw in with a staggered animation; turn it off with animate={false}",
+      "Hover or keyboard-focus a segment or legend row to highlight it; the centre shows its percent and name",
+      "Clickable legend hides and shows segments (aria-pressed), the total and the ring re-calculate",
+      "Chart has a text description for screen readers, and the legend works as a keyboard-accessible list",
+      "Loading skeleton, empty state, and a read-only mode (toggleable={false})",
+      "Optional onSegmentClick callback with the segment and its percent",
+      "Typed props for data, title, unit, size and labels; colours come from a palette unless you pass your own",
+      "Responsive: legend wraps under the chart on small screens, no overflow down to 280px; reduced-motion support",
+    ],
+    howToUse: [
+      "Watch the segments draw in when the page loads.",
+      "Hover a segment or a legend row to see its share of the total.",
+      "Click a legend row to hide that segment; click again to bring it back.",
+      "Tab to the legend and use Space or Enter to toggle with the keyboard.",
+    ],
+    tech: ["React", "TypeScript", "SVG", "CSS"],
+    props: [
+      { name: "data", type: "DonutSegment[]", default: "4 sample segments", description: "List of { id, label, value, color? }." },
+      { name: "title", type: "string", default: '"Time this week"', description: "Heading above the chart, also its accessible name." },
+      { name: "unit", type: "string", default: '"hrs"', description: "Unit written after the values." },
+      { name: "totalLabel", type: "string", default: '"total"', description: "Text under the total in the centre." },
+      { name: "size", type: "number", default: "200", description: "Chart diameter in px. It shrinks on narrow screens." },
+      { name: "animate", type: "boolean", default: "true", description: "Draw the segments in on mount." },
+      { name: "toggleable", type: "boolean", default: "true", description: "Let people hide segments from the legend." },
+      { name: "loading", type: "boolean", default: "false", description: "Show a loading skeleton." },
+      { name: "emptyText", type: "string", default: '"No data yet"', description: "Shown when there is nothing to chart." },
+      { name: "onSegmentClick", type: "(segment, percent) => void", default: "undefined", description: "Called when a segment is clicked." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import AnimatedDonutChart from "@/showcase/animated-donut-chart";
+
+export default function Example() {
+  return (
+    <AnimatedDonutChart
+      title="Sales by channel"
+      unit="k"
+      data={[
+        { id: "web", label: "Web", value: 42 },
+        { id: "app", label: "App", value: 31 },
+        { id: "shop", label: "Shop", value: 12, color: "#a3e635" },
+      ]}
     />
   );
 }`,
