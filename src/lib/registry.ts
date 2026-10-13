@@ -4,6 +4,7 @@ import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import MagnifyingDockNavbar from "@/showcase/magnifying-dock-navbar";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -307,6 +308,7 @@ export default function Onboarding() {
       { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
     ],
     usage: `import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import MagnifyingDockNavbar from "@/showcase/magnifying-dock-navbar";
 
 export default function Arcade() {
   return (
@@ -315,6 +317,59 @@ export default function Arcade() {
       hp={5}
       difficulty="hard"
       onFinish={(r) => console.log(r.won ? "You won" : "You lost", "in", r.rounds, "rounds")}
+    />
+  );
+}`,
+  },
+  {
+    slug: "magnifying-dock-navbar",
+    name: "Magnifying Dock Navbar",
+    type: "navbar",
+    week: 3,
+    description: "A floating icon dock whose icons grow as the pointer gets close, with labels and keyboard support.",
+    Component: MagnifyingDockNavbar,
+    previewScale: 0.8,
+    date: "2026-10-13",
+    summary:
+      "A floating navigation dock in the style of a desktop app bar. Icons are small until the pointer comes near, then they swell smoothly, with the closest one the biggest and its label floating above it. It works with the keyboard too: focusing an item magnifies it, and on touch screens it stays a simple, tappable row.",
+    features: [
+      "Distance-based magnification with a smooth falloff to the neighbours; maxScale and baseSize are props",
+      "Floating label above the hovered or focused item",
+      "Active item marked with a glowing dot, gradient tile and aria-current",
+      "Items are links when they have an href and buttons otherwise; individual items or the whole dock can be disabled",
+      "Keyboard: Tab through items, focus magnifies the item; visible focus ring",
+      "No magnification on touch devices, so taps stay accurate",
+      "Typed props for items, active id, sizes, label and onChange; controlled or uncontrolled",
+      "Responsive: tighter spacing on phones, no overflow down to 280px; reduced-motion support",
+    ],
+    howToUse: [
+      "Move the pointer along the dock and watch the icons grow.",
+      "Click an item to make it active.",
+      "Or press Tab to move between items with the keyboard.",
+    ],
+    tech: ["React", "TypeScript", "CSS"],
+    props: [
+      { name: "items", type: "DockItem[]", default: "5 sample items", description: "List of { id, label, icon, href?, disabled? }." },
+      { name: "defaultActiveId", type: "string", default: "first item", description: "Active item when you do not control it." },
+      { name: "activeId", type: "string", default: "undefined", description: "Controlled active item." },
+      { name: "baseSize", type: "number", default: "48", description: "Tile size in px when not magnified." },
+      { name: "maxScale", type: "number", default: "1.6", description: "How many times bigger the closest tile gets." },
+      { name: "ariaLabel", type: "string", default: '"Main"', description: "Accessible name of the navigation." },
+      { name: "disabled", type: "boolean", default: "false", description: "Disable every item." },
+      { name: "onChange", type: "(item: DockItem) => void", default: "undefined", description: "Called when an item is chosen." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import MagnifyingDockNavbar from "@/showcase/magnifying-dock-navbar";
+
+export default function Example() {
+  return (
+    <MagnifyingDockNavbar
+      items={[
+        { id: "home", label: "Home", icon: "H", href: "/" },
+        { id: "docs", label: "Docs", icon: "D", href: "/docs" },
+        { id: "soon", label: "Soon", icon: "S", disabled: true },
+      ]}
+      onChange={(item) => console.log(item.id)}
     />
   );
 }`,
