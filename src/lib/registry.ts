@@ -4,6 +4,7 @@ import HabitStreakCard from "@/showcase/habit-streak-card";
 import ColorContrastChecker from "@/showcase/color-contrast-checker";
 import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -307,6 +308,7 @@ export default function Onboarding() {
       { name: "className", type: "string", default: '""', description: "Extra classes for the outer wrapper." },
     ],
     usage: `import CatMouseDuel from "@/showcase/cat-mouse-duel";
+import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 
 export default function Arcade() {
   return (
@@ -315,6 +317,65 @@ export default function Arcade() {
       hp={5}
       difficulty="hard"
       onFinish={(r) => console.log(r.won ? "You won" : "You lost", "in", r.rounds, "rounds")}
+    />
+  );
+}`,
+  },
+  {
+    slug: "progress-steps-loader",
+    name: "Progress Steps Loader",
+    type: "loader",
+    week: 3,
+    description: "A step-by-step progress tracker with a spinner on the running step, a filling connector and a retry flow.",
+    Component: ProgressStepsLoader,
+    previewProps: { autoPlay: true, demoFailAt: 2 },
+    previewScale: 0.8,
+    date: "2026-10-13",
+    summary:
+      "A tracker for jobs that happen in stages, such as uploading, processing and publishing. Finished steps get a tick, the running step shows a spinner, and a connector line fills between them. If a step fails it turns red with a Retry button. The demo plays by itself and fails once on purpose so you can try the retry.",
+    features: [
+      "Four states per step: waiting, running (spinner and description), done (tick) and failed (red, with Retry)",
+      "Connector line fills with a gradient as steps finish",
+      "Drive it yourself with current and failedIndex, or use autoPlay for a self-running demo",
+      "demoFailAt makes one step fail on its first try, to show the retry flow",
+      "Live status line for screen readers (Step 2 of 4: Process) and aria-current on the running step",
+      "Replay button after it finishes in autoPlay",
+      "Typed props for steps, titles, timing and callbacks (onRetry, onComplete)",
+      "Responsive: switches to a vertical list below 480px, no overflow down to 280px; reduced-motion support",
+    ],
+    howToUse: [
+      "Watch each step run and tick off by itself.",
+      "At step 3 the demo fails on purpose. Press Retry to try again.",
+      "When all steps are done, press Replay to run it again.",
+    ],
+    tech: ["React", "TypeScript", "CSS"],
+    props: [
+      { name: "steps", type: "LoaderStep[]", default: "4 sample steps", description: "List of { id, label, description? }." },
+      { name: "current", type: "number", default: "0", description: "Index of the running step; use steps.length for all done." },
+      { name: "failedIndex", type: "number | null", default: "null", description: "Index of a failed step." },
+      { name: "autoPlay", type: "boolean", default: "false", description: "Demo mode that moves through the steps on a timer." },
+      { name: "stepMs", type: "number", default: "1500", description: "Milliseconds per step in autoPlay." },
+      { name: "demoFailAt", type: "number | null", default: "null", description: "In autoPlay, step that fails once." },
+      { name: "title", type: "string", default: '"Publishing your post"', description: "Heading above the steps." },
+      { name: "doneText", type: "string", default: '"All done"', description: "Message when every step is finished." },
+      { name: "onRetry", type: "(index: number) => void", default: "undefined", description: "Called when Retry is pressed." },
+      { name: "onComplete", type: "() => void", default: "undefined", description: "Called once when all steps are done." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import ProgressStepsLoader from "@/showcase/progress-steps-loader";
+
+export default function Example({ stage, error }: { stage: number; error: boolean }) {
+  return (
+    <ProgressStepsLoader
+      title="Importing contacts"
+      steps={[
+        { id: "read", label: "Read file" },
+        { id: "check", label: "Check rows" },
+        { id: "save", label: "Save" },
+      ]}
+      current={stage}
+      failedIndex={error ? stage : null}
+      onRetry={() => console.log("retry")}
     />
   );
 }`,
