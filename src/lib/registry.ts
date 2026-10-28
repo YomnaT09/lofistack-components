@@ -6,6 +6,7 @@ import LaptopCatQuiz from "@/showcase/laptop-cat-quiz";
 import CatMouseDuel from "@/showcase/cat-mouse-duel";
 import GuitarStudio from "@/showcase/guitar-studio";
 import ProgressStepsLoader from "@/showcase/progress-steps-loader";
+import TiltCard from "@/showcase/tilt-card";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -438,6 +439,66 @@ export default function Example() {
       defaultChord="G"
       tempo={80}
       onPluck={({ string, fret }) => console.log(string, fret)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "tilt-card",
+    name: "Holo Tilt Card",
+    type: "card",
+    week: 4,
+    description: "A holographic collector card that tilts in 3D toward your pointer while a rainbow foil shine and glare slide across it.",
+    Component: TiltCard,
+    previewProps: { showFoilPicker: true },
+    previewScale: 0.62,
+    date: "2026-10-28",
+    summary:
+      "A trading-card style card that leans toward your mouse or finger in 3D. A foil shine moves across the surface as it tilts, sparkles show up near the edges and a soft white glare follows the pointer, just like turning a real holo card in the light. Pick a rainbow, gold or ice foil under the card.",
+    features: [
+      "3D tilt that follows the pointer, with a slight zoom while you hover",
+      "Foil shine, sparkles and light glare that move with the tilt",
+      "The art inside the window shifts a little the other way, so it feels deeper",
+      "Three foils: rainbow, gold and ice, with an optional picker",
+      "Works with mouse, touch and keyboard (arrow keys tilt, Escape resets)",
+      "Smooth: updates CSS variables once per frame, with no React re-render while moving",
+      "Typed props for name, HP, art, moves, rarity, foil, tilt strength and glare",
+      "Reduced-motion and disabled support, visible focus ring, no overflow down to 280px",
+    ],
+    howToUse: [
+      "Move your mouse over the card, or drag a finger on it, and watch it tilt.",
+      "Go to the corners to see the strongest foil shine and sparkles.",
+      "Press Tab to focus the card, then use the arrow keys to tilt it. Escape puts it back.",
+      "Pick Rainbow, Gold or Ice under the card to switch the foil.",
+    ],
+    tech: ["React", "TypeScript", "CSS 3D transforms"],
+    props: [
+      { name: "name", type: "string", default: '"Lofi Cat"', description: "Name at the top of the card." },
+      { name: "hp", type: "number", default: "90", description: "Number shown as HP." },
+      { name: "art", type: "ReactNode", default: '"🐱"', description: "Picture in the art window." },
+      { name: "moves", type: "HoloMove[]", default: "2 sample moves", description: "List of { icon, name, power }." },
+      { name: "rarity", type: "string", default: '"★ HOLO RARE"', description: "Label at the bottom right." },
+      { name: "foil", type: '"rainbow" | "gold" | "ice"', default: '"rainbow"', description: "Colour of the foil shine." },
+      { name: "showFoilPicker", type: "boolean", default: "false", description: "Show buttons to switch the foil." },
+      { name: "maxTilt", type: "number", default: "16", description: "Biggest tilt in degrees." },
+      { name: "glare", type: "boolean", default: "true", description: "Show the white light glare." },
+      { name: "disabled", type: "boolean", default: "false", description: "Turn the tilt and shine off." },
+      { name: "onFoilChange", type: "(foil: HoloFoil) => void", default: "undefined", description: "Called when the foil is switched." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import TiltCard from "@/showcase/tilt-card";
+
+export default function Example() {
+  return (
+    <TiltCard
+      name="Night Owl"
+      hp={120}
+      art="🦉"
+      foil="ice"
+      moves={[
+        { icon: "🌙", name: "Moon Glide", power: 40 },
+        { icon: "🎹", name: "Soft Keys", power: 70 },
+      ]}
     />
   );
 }`,
