@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 
-export type HoloFoil = "rainbow" | "gold" | "ice";
+export type HoloFoil = "emerald" | "gold" | "ice";
 
 export interface HoloMove {
   icon: string;
@@ -41,7 +41,7 @@ const DEFAULT_MOVES: HoloMove[] = [
   { icon: "🎧", name: "Beat Drop", power: 60 },
 ];
 
-const FOILS: HoloFoil[] = ["rainbow", "gold", "ice"];
+const FOILS: HoloFoil[] = ["emerald", "gold", "ice"];
 
 // Keyboard steps: arrow keys move the "pointer" in quarters of the card.
 const KEY_STEP = 0.25;
@@ -53,7 +53,7 @@ export default function TiltCard({
   art = "🐱",
   moves = DEFAULT_MOVES,
   rarity = "★ HOLO RARE",
-  foil: initialFoil = "rainbow",
+  foil: initialFoil = "emerald",
   showFoilPicker = false,
   maxTilt = 16,
   glare = true,
@@ -197,7 +197,7 @@ const CSS = `
 .htc *{box-sizing:border-box}
 .htc-scene{perspective:900px;padding:12px;width:100%;display:flex;justify-content:center;touch-action:pan-y}
 .htc-card{--rx:0deg;--ry:0deg;--mx:50%;--my:50%;--hyp:0;
-  --c1:#fb7185;--c2:#facc15;--c3:#34d399;--c4:#38bdf8;--c5:#a78bfa;--edge:#c4b5fd;--glow:rgba(139,92,246,.45);
+  --c1:#6ee7b7;--c2:#34d399;--c3:#a7f3d0;--c4:#2dd4bf;--c5:#6ee7b7;--edge:#34d399;--glow:rgba(16,185,129,.5);
   position:relative;width:min(260px,100%);aspect-ratio:13/17;border-radius:20px;overflow:hidden;
   background:#141029;border:2px solid var(--edge);outline:none;
   transform:rotateX(var(--rx)) rotateY(var(--ry)) scale(1);transform-style:preserve-3d;
@@ -235,7 +235,7 @@ const CSS = `
 .htc-chip{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#cbd2e6;font:inherit;font-size:13px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
 .htc-chip:hover{background:rgba(255,255,255,.12)}
 .htc-chip[aria-checked="true"]{color:#0f1226;font-weight:600;border-color:transparent}
-.htc-chip.chip-rainbow[aria-checked="true"]{background:linear-gradient(90deg,#fb7185,#facc15,#34d399,#38bdf8)}
+.htc-chip.chip-emerald[aria-checked="true"]{background:linear-gradient(90deg,#6ee7b7,#2dd4bf)}
 .htc-chip.chip-gold[aria-checked="true"]{background:linear-gradient(90deg,#fde68a,#f59e0b)}
 .htc-chip.chip-ice[aria-checked="true"]{background:linear-gradient(90deg,#a5f3fc,#c4b5fd)}
 .htc-chip:focus-visible{outline:2px solid #fb7185;outline-offset:2px}
