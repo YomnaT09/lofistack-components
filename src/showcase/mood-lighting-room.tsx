@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import screenImg from "@/assets/laptop-screen-chimp.jpg";
 
 export type RoomLight = "lamp" | "fairy" | "laptop" | "ceiling";
 export type RoomTime = "day" | "night";
@@ -136,6 +137,9 @@ export default function MoodLightingRoom({
               <stop offset="0" stopColor={night ? "#0b1240" : "#38bdf8"} />
               <stop offset="1" stopColor={night ? "#1e1b4b" : "#bae6fd"} />
             </linearGradient>
+            <clipPath id={g("scr")}>
+              <rect x="263" y="217" width="60" height="38" rx="3" />
+            </clipPath>
             <clipPath id={g("win")}>
               <rect x="50" y="40" width="130" height="150" rx="65" />
             </clipPath>
@@ -230,7 +234,11 @@ export default function MoodLightingRoom({
             onClick={() => toggle("lamp")}
           />
           <rect x="263" y="217" width="60" height="38" rx="3" className="cmr-fill cmr-hit" style={{ fill: lights.laptop ? "#38bdf8" : "#111827" }} onClick={() => toggle("laptop")} />
-          {lights.laptop && <path d="M272 245 l10 -10 l8 6 l14 -14" stroke="#e0f2fe" strokeWidth="2" fill="none" pointerEvents="none" />}
+          <image
+            href={screenImg.src} x="263" y="217" width="60" height="38" preserveAspectRatio="xMidYMid slice"
+            clipPath={`url(#${g("scr")})`} className="cmr-fade cmr-hit" style={{ opacity: lights.laptop ? 1 : 0 }}
+            onClick={() => toggle("laptop")}
+          />
           <g className={`cmr-hit${lights.fairy ? " cmr-twinkle" : ""}`} onClick={() => toggle("fairy")}>
             {BULBS.map(([x, y], i) => (
               <g key={i} style={{ animationDelay: `${(i % 4) * 0.35}s` }}>
