@@ -94,7 +94,7 @@ export default function GalleryGrid({ variant = "pixel" }: { variant?: GalleryVa
                   <Component {...previewProps} />
                 </div>
                 <span className={`absolute left-3 top-3 px-2 py-1 text-[10px] ${t.num}`}>
-                  1-{n}
+                  {n}
                 </span>
               </div>
               <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
