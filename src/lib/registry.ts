@@ -9,6 +9,7 @@ import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 import TiltCard from "@/showcase/tilt-card";
 import BubbleSortPuzzle from "@/showcase/bubble-sort-puzzle";
 import MoodLightingRoom from "@/showcase/mood-lighting-room";
+import LofiRadioTuner from "@/showcase/lofi-radio-tuner";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -602,6 +603,59 @@ export default function Example() {
       defaultWarmth={85}
       defaultLights={{ lamp: true, fairy: true, laptop: false }}
       onChange={(s) => console.log(s.mood)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "lofi-radio-tuner",
+    name: "Lofi Radio Tuner",
+    type: "input",
+    week: 6,
+    description: "A wooden retro radio. Turn the knob to scan the dial, hear static between stations, and lock onto five lofi stations that each change the mood.",
+    Component: LofiRadioTuner,
+    previewWidth: 560,
+    previewScale: 0.42,
+    date: "2026-11-03",
+    summary:
+      "A cozy wooden radio you actually tune. Drag the big knob (or scroll, or use the arrow keys) and the red needle slides across the 88 to 108 FM dial. Between stations you hear and see static; as you get close to a station the static fades, the name un-scrambles and the signal bars fill up. Each of the five stations plays its own generated lofi loop with its own ambience (rain, crickets, waves or a crackling fire), shows its own little animated scene, and recolours the whole radio's glow. All the sound is made live in the browser with the Web Audio API, so there are no audio files.",
+    features: [
+      "Drag-to-turn tuning knob with scroll wheel and full keyboard support (arrows, Page Up/Down to jump stations, Home/End)",
+      "Real tuning feel: static fades out and the music fades in as the needle gets close to a station",
+      "Station name scrambles on a weak signal and clears up when you lock on, with a 5-bar signal meter",
+      "Five stations: Rain Café, Night Drive, Sunday Study, Ocean Tapes and Fireplace FM, each with its own colour, scene and sound",
+      "Lofi music generated live with Web Audio: swung drums, soft chord pads, random melody notes and vinyl dust, plus rain, crickets, waves or fire crackle",
+      "Animated scene window (rain, stars and moon, sun and clouds, waves, fireplace) with TV-style snow on static",
+      "Click anywhere on the dial to jump there, or use the ◀ ▶ seek buttons; power button and volume slider",
+      "Bring your own stations through the stations prop; onTune tells you when a station locks in",
+      "Reduced-motion support and a stacked layout on phones",
+    ],
+    howToUse: [
+      "Press the power button (⏻) to switch the radio on and allow sound.",
+      "Drag the big Tune knob around, scroll on it, or use the arrow keys.",
+      "Listen for the static to clear and watch the station name sharpen up.",
+      "Use ◀ ▶ to jump straight to the previous or next station.",
+      "Try all five stations and watch the scene and colours change.",
+    ],
+    tech: ["React", "TypeScript", "Web Audio API", "CSS animations"],
+    props: [
+      { name: "defaultFrequency", type: "number", default: "97.7", description: "Where the needle starts, from 88 to 108." },
+      { name: "stations", type: "RadioStation[]", default: "DEFAULT_STATIONS", description: "Stations on the dial: freq, name, vibe, color, scene, bpm and root note." },
+      { name: "defaultVolume", type: "number", default: "0.6", description: "Start volume, 0 to 1." },
+      { name: "onTune", type: "(station: RadioStation | null, frequency: number) => void", default: "undefined", description: "Called when you lock onto a station, or drift off one (station is null on static)." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import LofiRadioTuner, { DEFAULT_STATIONS } from "@/showcase/lofi-radio-tuner";
+
+export default function Example() {
+  return (
+    <LofiRadioTuner
+      defaultFrequency={89.5}
+      stations={[
+        ...DEFAULT_STATIONS,
+        { freq: 99.9, name: "Yomna FM", vibe: "my own station", color: "#ff8fb1", scene: "night", bpm: 75, root: 58 },
+      ]}
+      onTune={(s, f) => console.log(s ? \`Tuned to \${s.name}\` : \`Static at \${f}\`)}
     />
   );
 }`,
