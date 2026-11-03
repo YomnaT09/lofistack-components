@@ -7,6 +7,7 @@ import CatMouseDuel from "@/showcase/cat-mouse-duel";
 import GuitarStudio from "@/showcase/guitar-studio";
 import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 import TiltCard from "@/showcase/tilt-card";
+import BubbleSortBars from "@/showcase/bubble-sort-bars";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -499,6 +500,59 @@ export default function Example() {
         { icon: "🌙", name: "Moon Glide", power: 40 },
         { icon: "🎹", name: "Soft Keys", power: 70 },
       ]}
+    />
+  );
+}`,
+  },
+  {
+    slug: "bubble-sort-bars",
+    name: "Bubble Sort Bars",
+    type: "chart",
+    week: 5,
+    description: "Gradient bars that sort themselves with bubble sort, step by step, with the Python code lighting up as it runs.",
+    Component: BubbleSortBars,
+    previewProps: { autoPlay: true },
+    previewScale: 0.4,
+    previewWidth: 760,
+    date: "2026-11-03",
+    summary:
+      "A bar chart that runs my Python bubble_sort one step at a time. The two bars being compared glow pink, they slide past each other when they swap, and each pass pushes the biggest bar to the right where it turns green. The code sits next to the chart with the running line lit up, and counters show the pass, compares, swaps and the swapped flag. When a pass ends with no swaps, the early exit fires and shows how many passes it saved.",
+    features: [
+      "Runs the exact bubble_sort from the code panel: shrinking n - 1 - p range and early exit",
+      "Pink glow on the pair being compared, smooth slide when two bars swap",
+      "Bars turn green once they reach their final spot",
+      "Code panel lights up the Python line that is running",
+      "Live counters for pass p, compares, swaps and the swapped flag",
+      "Early exit banner that says how many passes were saved",
+      "Play, pause, step forward and back, shuffle, almost sorted, speed and size (5 to 20 bars)",
+      "Keyboard friendly buttons, screen reader status line, reduced-motion support, stacks on small screens",
+    ],
+    howToUse: [
+      "Press Play to watch the whole sort, or Step to move one step at a time.",
+      "Use ⏮ to go back a step and look again.",
+      "Press Shuffle for a new random list, or Almost sorted to see the early exit happen after only a few passes.",
+      "Change the speed with the slider and the number of bars with − and +.",
+    ],
+    tech: ["React", "TypeScript", "CSS transitions"],
+    props: [
+      { name: "values", type: "number[]", default: "demo list", description: "Numbers to sort." },
+      { name: "size", type: "number", default: "12", description: "Number of bars (5 to 20) when values is not given." },
+      { name: "speed", type: "1 | 2 | 3 | 4 | 5", default: "3", description: "Playback speed, 5 is fastest." },
+      { name: "autoPlay", type: "boolean", default: "false", description: "Start playing on load." },
+      { name: "loop", type: "boolean", default: "false", description: "Shuffle and play again after each sort." },
+      { name: "showCode", type: "boolean", default: "true", description: "Show the Python code panel." },
+      { name: "showControls", type: "boolean", default: "true", description: "Show the control buttons." },
+      { name: "onDone", type: "(stats: BubbleSortStats) => void", default: "undefined", description: "Called with passes, compares, swaps and earlyExit when a sort ends." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import BubbleSortBars from "@/showcase/bubble-sort-bars";
+
+export default function Example() {
+  return (
+    <BubbleSortBars
+      values={[5, 1, 4, 2, 8, 3]}
+      speed={2}
+      onDone={(s) => console.log(\`\${s.passes} passes, early exit: \${s.earlyExit}\`)}
     />
   );
 }`,
