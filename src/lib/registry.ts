@@ -11,6 +11,7 @@ import BubbleSortPuzzle from "@/showcase/bubble-sort-puzzle";
 import MoodLightingRoom from "@/showcase/mood-lighting-room";
 import LofiRadioTuner from "@/showcase/lofi-radio-tuner";
 import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
+import RobotBand from "@/showcase/robot-band";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -710,6 +711,7 @@ export default function Example() {
       { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
     ],
     usage: `import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
+import RobotBand from "@/showcase/robot-band";
 
 export default function Example() {
   return (
@@ -717,6 +719,62 @@ export default function Example() {
       defaultStyle="bw"
       defaultCaption="quiet room ✿"
       onPrint={(look) => console.log("Printed in", look)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "robot-band",
+    name: "Copycat Robot Band",
+    type: "input",
+    week: 7,
+    description: "Five sleepy robots. Record any sound for each one with your microphone (a table tap, a clap, your voice) and they wake up and turn your sounds into a looping tune.",
+    Component: RobotBand,
+    previewProps: { demo: true },
+    previewWidth: 720,
+    previewScale: 0.4,
+    date: "2026-11-03",
+    summary:
+      "A band of five little robots that copy whatever sound you teach them. Press Teach under a robot, make any noise into your microphone (tap the table, clap, click a pen, hum, sing, ting a glass) and the robot wakes up, shows your sound as a waveform on its chest and says it learned it. Each robot has a job: Boom plays it as a kick drum, Snap as a snare, Tick as a hi-hat, Bassy as a bass line and Melo as the melody. The recording is trimmed, cleaned up and its pitch is detected, then the bass and melody robots re-pitch your sound to play real notes over a four-bar chord progression. Switch between Lofi, Chiptune and Bossa to hear the same sounds in a new style, roll a new melody, mute robots, and save the tune as a WAV file. Everything runs in your browser with the Web Audio API, so your recordings are never uploaded.",
+    features: [
+      "Record any sound per robot from the microphone, with auto-stop when you go quiet and a live level glow on the robot's ears and antenna",
+      "Recordings are trimmed of silence, faded and normalised so even quiet sounds work",
+      "Pitch detection (autocorrelation) so a hum or a sung note is re-tuned to play real bass and melody notes",
+      "Each robot shapes its sound for its job: low-passed kick, snappy snare, short bright hi-hat, bass and melody with echo",
+      "Generated four-bar tune with chords, bass line and a seeded melody; 🎲 New tune writes a fresh melody",
+      "Three styles: Lofi (swing, warm filter, vinyl dust), Chiptune (fast, bit-crushed) and Bossa",
+      "Robots bop in time, sleep until they are taught, and show the sound's waveform on their chest",
+      "Hear, re-teach or mute each robot; step lights show where the loop is",
+      "Save two loops as a WAV file, rendered offline in the browser",
+      "Built-in demo sounds so it works without a microphone; private by design, nothing is uploaded",
+      "Keyboard friendly, screen reader status updates, reduced-motion support and a 3-column layout on phones",
+    ],
+    howToUse: [
+      "Press ● Teach under a robot and allow the microphone when the browser asks.",
+      "Make any short sound: tap the table, clap, hum, or say a word. The robot stops listening when you go quiet.",
+      "Teach the other robots too (or press Use demo sounds to try it first).",
+      "Press ▶ Play band and listen to your sounds become a tune.",
+      "Switch Lofi, Chiptune and Bossa, press 🎲 New tune for a new melody, and mute robots you don't want.",
+      "Press ⬇ Save WAV to download your tune.",
+    ],
+    tech: ["React", "TypeScript", "Web Audio API", "getUserMedia", "OfflineAudioContext", "CSS animations"],
+    files: ["robot-band.tsx", "robot-band-audio.ts"],
+    props: [
+      { name: "defaultGenre", type: '"lofi" | "chip" | "bossa"', default: '"lofi"', description: "Style the band plays in at the start." },
+      { name: "demo", type: "boolean", default: "false", description: "Load five built-in sounds so the band can play before anyone uses the microphone." },
+      { name: "defaultVolume", type: "number", default: "0.7", description: "Start volume, 0 to 1." },
+      { name: "maxSeconds", type: "number", default: "2.5", description: "Longest recording, in seconds." },
+      { name: "onTeach", type: "(robot, seconds, pitch) => void", default: "undefined", description: "Called after a robot learns a sound. pitch is in Hz, or null for noisy sounds." },
+      { name: "onPlayChange", type: "(playing: boolean) => void", default: "undefined", description: "Called when the band starts or stops." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import RobotBand from "@/showcase/robot-band";
+
+export default function Example() {
+  return (
+    <RobotBand
+      defaultGenre="bossa"
+      onTeach={(robot, secs, pitch) => console.log(robot, secs.toFixed(2) + "s", pitch)}
     />
   );
 }`,
