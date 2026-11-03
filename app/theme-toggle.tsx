@@ -5,16 +5,16 @@ import { useEffect, useState } from "react";
 type Theme = "dark" | "light";
 
 const OPTIONS: { value: Theme; label: string }[] = [
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Default" },
+  { value: "light", label: "Day" },
+  { value: "dark", label: "Night" },
 ];
 
 // Saves the choice in localStorage; the inline script in layout.tsx applies it before first paint.
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+    setTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
   }, []);
 
   const choose = (next: Theme) => {
@@ -28,15 +28,15 @@ export default function ThemeToggle() {
   };
 
   return (
-    <div role="group" aria-label="Colour theme" className="flex rounded-md border border-acc1/50 p-0.5 font-mono text-xs uppercase tracking-wider">
+    <div role="group" aria-label="Colour theme" className="flex border-2 border-white p-0.5 font-[family-name:var(--font-pixel)] text-[10px] uppercase">
       {OPTIONS.map((o) => (
         <button
           key={o.value}
           type="button"
           aria-pressed={theme === o.value}
           onClick={() => choose(o.value)}
-          className={`rounded px-2.5 py-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-acc2 ${
-            theme === o.value ? "bg-acc2 text-[rgb(var(--on-acc2))]" : "text-acc1-soft hover:bg-acc1/10"
+          className={`px-2.5 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pq-coin ${
+            theme === o.value ? "bg-pq-coin text-pq-ink" : "text-white hover:bg-white/15"
           }`}
         >
           {o.label}

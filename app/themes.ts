@@ -1,5 +1,5 @@
-// Look of the gallery home page (Neon Arcade). Only class names live here.
-export type GalleryVariant = "neon";
+// Look of the gallery home page (Pixel Quest). Only class names live here.
+export type GalleryVariant = "pixel";
 
 export interface GalleryTheme {
   root: string;
@@ -39,42 +39,45 @@ export interface GalleryTheme {
   focus: string;
 }
 
+const PIXEL = "font-[family-name:var(--font-pixel)]";
+const PIXEL_BODY = "font-[family-name:var(--font-pixel-body)]";
+
 export const THEMES: Record<GalleryVariant, GalleryTheme> = {
-  neon: {
-    root: "bg-page text-acc1-soft",
-    eyebrow: "border border-acc1/60 bg-acc1/10 font-mono uppercase tracking-widest text-acc1-soft rounded-md",
-    title: ["Component", "Arcade"],
-    titleA: "uppercase tracking-tight text-acc1 [text-shadow:0_0_24px_rgb(var(--acc1)/calc(.7*var(--glow)))]",
-    titleB: "uppercase tracking-tight text-acc2 [text-shadow:0_0_24px_rgb(var(--acc2)/calc(.7*var(--glow)))]",
-    lead: "font-mono text-acc1-soft/80",
-    primary: "bg-acc2 text-[rgb(var(--on-acc2))] shadow-[0_0_30px_-4px_rgb(var(--acc2)/.9)] hover:bg-acc2 rounded-md uppercase tracking-wider font-mono",
-    secondary: "border-2 border-acc1 text-acc1-soft hover:bg-acc1/10 rounded-md uppercase tracking-wider font-mono",
-    stat: "rounded-lg border-2 border-acc1/50 bg-surface/60 shadow-[0_0_24px_-10px_rgb(var(--acc1)/.8)]",
-    statValue: "text-acc2 font-mono",
-    statLabel: "text-acc1-soft/80 font-mono uppercase text-xs tracking-wider",
-    track: "bg-acc1/10 rounded-sm",
-    fill: "bg-gradient-to-r from-acc1 to-acc2 rounded-sm",
-    h2: "font-mono uppercase tracking-widest text-acc1-soft",
-    chipOn: "border-acc2 bg-acc2 text-[rgb(var(--on-acc2))] rounded-md font-mono uppercase tracking-wider",
-    chipOff: "border-acc1/50 bg-surface/50 text-acc1-soft hover:bg-acc1/10 rounded-md font-mono uppercase tracking-wider",
-    chipCount: ["text-[rgb(var(--on-acc2))]/80", "text-acc1-soft/70"],
-    search: "rounded-md border-2 border-acc1/50 bg-surface/60 font-mono text-acc1-soft placeholder:text-acc1-soft/60",
-    muted: "text-acc1-soft/70 font-mono",
-    card: "rounded-xl border-2 border-acc1/60 bg-surface/60 shadow-[0_0_0_1px_rgb(var(--acc2)/.35),0_0_30px_-10px_rgb(var(--acc1)/calc(.7*var(--glow)))] hover:-translate-y-1 hover:border-acc2 hover:shadow-[0_0_0_1px_rgb(var(--acc2)/.8),0_0_44px_-6px_rgb(var(--acc2)/.75)]",
-    cardTitle: "text-acc1-soft uppercase tracking-wide",
-    cardDesc: "text-acc1-soft/75",
-    cardFoot: "border-acc1/30 text-acc1-soft/75 font-mono uppercase",
-    cardLink: "text-acc2 font-mono",
-    stage: "rounded-lg bg-[#0a0820]",
-    stageGrid: "bg-[linear-gradient(rgb(var(--acc1)/.12)_1px,transparent_1px),linear-gradient(90deg,rgb(var(--acc1)/.12)_1px,transparent_1px)] [background-size:22px_22px]",
-    num: "bg-acc2 text-[rgb(var(--on-acc2))] font-mono rounded-sm",
-    badge: "border-acc1 bg-acc1/10 text-acc1-soft font-mono uppercase rounded-sm",
-    footer: "border-acc1/30 text-acc1-soft/75 font-mono",
-    footerLink: "text-acc2",
-    header: "border-acc1/40 bg-page/90 text-acc1-soft",
-    headerPill: "border-acc2/60 text-acc2-soft font-mono uppercase rounded-sm",
-    emptyBox: "border-acc1/40 text-acc1-soft font-mono",
-    clear: "text-acc2",
-    focus: "focus-visible:outline-acc2",
+  pixel: {
+    root: `${PIXEL_BODY} text-white`,
+    eyebrow: "",
+    title: ["LOFISTACK", "QUEST"],
+    titleA: `${PIXEL} pq-title`,
+    titleB: `${PIXEL} pq-title`,
+    lead: "pq-outline text-white",
+    primary: `${PIXEL} pq-press bg-pq-coin text-pq-ink text-xs`,
+    secondary: `${PIXEL} pq-press bg-pq-card text-pq-card-ink text-xs`,
+    stat: "",
+    statValue: `${PIXEL} pq-outline text-white`,
+    statLabel: `${PIXEL} pq-outline text-white`,
+    track: "",
+    fill: "",
+    h2: `${PIXEL} pq-outline text-white`,
+    chipOn: `${PIXEL} pq-press bg-pq-coin text-pq-ink`,
+    chipOff: `${PIXEL} pq-press bg-pq-card text-pq-card-ink`,
+    chipCount: ["text-pq-ink/70", "text-pq-label"],
+    search: `${PIXEL_BODY} pq-press bg-pq-card text-pq-card-ink placeholder:text-pq-label text-base`,
+    muted: `${PIXEL} pq-outline text-white`,
+    card: "pq-box bg-pq-card text-pq-card-ink hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[10px_10px_0_rgb(var(--pq-ink))]",
+    cardTitle: `${PIXEL_BODY} text-pq-card-ink`,
+    cardDesc: `${PIXEL_BODY} text-pq-card-ink/80`,
+    cardFoot: `${PIXEL} border-pq-ink/25 text-pq-label`,
+    cardLink: `${PIXEL} text-pq-coin-dark`,
+    stage: "bg-[#fff1cf] border-b-4 border-pq-ink",
+    stageGrid: "bg-[linear-gradient(rgb(26_26_46/.06)_1px,transparent_1px),linear-gradient(90deg,rgb(26_26_46/.06)_1px,transparent_1px)] [background-size:16px_16px]",
+    num: `${PIXEL} bg-pq-coin text-pq-ink border-2 border-pq-ink`,
+    badge: `${PIXEL} border-2 border-pq-ink bg-white text-pq-card-ink uppercase text-[9px]`,
+    footer: `${PIXEL} border-pq-ink bg-pq-ink text-white text-[10px]`,
+    footerLink: "text-pq-coin",
+    header: "",
+    headerPill: "",
+    emptyBox: `${PIXEL_BODY} pq-box bg-pq-card text-pq-card-ink`,
+    clear: "text-pq-coin-dark",
+    focus: "focus-visible:outline-pq-coin",
   },
 };

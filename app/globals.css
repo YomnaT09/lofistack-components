@@ -12,6 +12,18 @@
   --page: 5 5 12;
   --surface: 0 0 0;
   --glow: 1;
+  /* Pixel Quest home page: night sky (dark theme) */
+  --pq-sky: 27 35 80;
+  --pq-sky-low: 58 52 120;
+  --pq-ground: 107 61 28;
+  --pq-grass: 47 138 58;
+  --pq-ink: 11 11 24;
+  --pq-card: 255 244 214;
+  --pq-card-ink: 26 26 46;
+  --pq-coin: 255 210 63;
+  --pq-coin-dark: 194 65 12;
+  --pq-label: 138 90 43;
+  --pq-text: 255 255 255;
   color-scheme: dark;
 }
 
@@ -25,6 +37,18 @@ html[data-theme="light"] {
   --page: 244 247 251;
   --surface: 255 255 255;
   --glow: 0.3;
+  /* Pixel Quest home page: day sky (light theme) */
+  --pq-sky: 95 180 255;
+  --pq-sky-low: 150 210 255;
+  --pq-ground: 200 117 51;
+  --pq-grass: 92 201 92;
+  --pq-ink: 26 26 46;
+  --pq-card: 255 248 231;
+  --pq-card-ink: 26 26 46;
+  --pq-coin: 255 210 63;
+  --pq-coin-dark: 194 65 12;
+  --pq-label: 138 90 43;
+  --pq-text: 255 255 255;
   color-scheme: light;
 }
 
@@ -36,10 +60,75 @@ html[data-theme="light"] {
   --color-ink: rgb(var(--ink));
   --color-page: rgb(var(--page));
   --color-surface: rgb(var(--surface));
+  --color-pq-sky: rgb(var(--pq-sky));
+  --color-pq-ground: rgb(var(--pq-ground));
+  --color-pq-grass: rgb(var(--pq-grass));
+  --color-pq-ink: rgb(var(--pq-ink));
+  --color-pq-card: rgb(var(--pq-card));
+  --color-pq-card-ink: rgb(var(--pq-card-ink));
+  --color-pq-coin: rgb(var(--pq-coin));
+  --color-pq-coin-dark: rgb(var(--pq-coin-dark));
+  --color-pq-label: rgb(var(--pq-label));
+  --font-pixel: var(--font-press-start), ui-monospace, monospace;
+  --font-pixel-body: var(--font-pixelify), ui-monospace, monospace;
 }
 
 body {
   font-family: var(--font-lexend), system-ui, sans-serif;
   background: rgb(var(--page));
   color: rgb(var(--ink));
+}
+
+/* ---------- Pixel Quest home page ---------- */
+.pq-sky {
+  background: linear-gradient(rgb(var(--pq-sky)) 0 55%, rgb(var(--pq-sky-low)));
+}
+.pq-outline {
+  text-shadow: 3px 3px 0 rgb(var(--pq-ink));
+}
+.pq-title {
+  color: rgb(var(--pq-coin));
+  text-shadow: 4px 4px 0 rgb(var(--pq-coin-dark)), 8px 8px 0 rgb(var(--pq-ink));
+}
+@media (min-width: 640px) {
+  .pq-title { text-shadow: 6px 6px 0 rgb(var(--pq-coin-dark)), 10px 10px 0 rgb(var(--pq-ink)); }
+}
+/* Blocky cloud drawn with box-shadows; scale it with transform. Hidden at night. */
+.pq-cloud {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  box-shadow: 16px 0 #fff, 32px 0 #fff, 8px -16px #fff, 24px -16px #fff;
+}
+.pq-star {
+  width: 4px;
+  height: 4px;
+  background: #fff6c9;
+  box-shadow: 0 0 0 2px rgb(255 246 201 / 0.25);
+}
+html[data-theme="light"] .pq-night { display: none; }
+html:not([data-theme="light"]) .pq-day { display: none; }
+.pq-ground {
+  background-color: rgb(var(--pq-ground));
+  background-image:
+    linear-gradient(rgb(var(--pq-grass)) 0 26px, rgb(var(--pq-ink)) 26px 30px, transparent 30px),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgb(0 0 0 / 0.18) 46px 50px),
+    repeating-linear-gradient(transparent 0 46px, rgb(0 0 0 / 0.18) 46px 50px);
+}
+.pq-box {
+  border: 4px solid rgb(var(--pq-ink));
+  box-shadow: 6px 6px 0 rgb(var(--pq-ink));
+}
+.pq-press {
+  border: 4px solid rgb(var(--pq-ink));
+  box-shadow: 4px 4px 0 rgb(var(--pq-ink));
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.pq-press:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 rgb(var(--pq-ink)); }
+.pq-press:active { transform: translate(4px, 4px); box-shadow: 0 0 0 rgb(var(--pq-ink)); }
+.pq-blink { animation: pq-blink 1.1s steps(2, start) infinite; }
+@keyframes pq-blink { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  .pq-blink { animation: none; }
+  .pq-press, .pq-press:hover, .pq-press:active { transition: none; transform: none; }
 }

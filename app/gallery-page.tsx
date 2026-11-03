@@ -4,83 +4,104 @@ import GalleryGrid from "./gallery-grid";
 import { THEMES, type GalleryVariant } from "./themes";
 
 const TOTAL = 30;
+const END_LABEL = "DEC 29";
 
-function Background() {
+// Day sky gets blocky clouds, night sky gets stars and a moon (CSS toggles them by theme).
+function Sky() {
+  // Placed in the empty space around the text: the first four on wider screens, the last two at the bottom on phones.
+  const clouds = [
+    { pos: { left: "4%", top: 190 }, scale: 2.2, cls: "hidden sm:block" },
+    { pos: { left: "80%", top: 200 }, scale: 2.6, cls: "hidden sm:block" },
+    { pos: { left: "88%", top: 370 }, scale: 1.3, cls: "hidden lg:block" },
+    { pos: { left: "3%", top: 420 }, scale: 1.2, cls: "hidden lg:block" },
+    { pos: { left: "6%", bottom: 34 }, scale: 1.6, cls: "sm:hidden" },
+    { pos: { right: "12%", bottom: 64 }, scale: 1, cls: "sm:hidden" },
+  ];
+  const stars = [
+    [6, 80], [14, 210], [22, 120], [31, 300], [44, 70], [52, 330], [63, 140], [71, 260], [84, 200], [92, 110], [96, 320], [38, 190],
+  ];
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-x-0 top-0 h-[620px] bg-[linear-gradient(rgb(var(--acc1)/.1)_1px,transparent_1px),linear-gradient(90deg,rgb(var(--acc1)/.1)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:linear-gradient(to_bottom,black,transparent)]" />
-      <div className="absolute -left-20 top-0 h-[380px] w-[380px] rounded-full bg-acc1/20 blur-[110px]" />
-      <div className="absolute -right-20 top-24 h-[380px] w-[380px] rounded-full bg-acc2/25 blur-[110px]" />
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="pq-day">
+        {clouds.map((c, i) => (
+          <div key={i} className={`pq-cloud absolute origin-top-left ${c.cls}`} style={{ ...c.pos, transform: `scale(${c.scale})` }} />
+        ))}
+      </div>
+      <div className="pq-night">
+        {stars.map(([x, y], i) => (
+          <div key={i} className="pq-star absolute" style={{ left: `${x}%`, top: y }} />
+        ))}
+        <div className="absolute right-[9%] top-24 h-16 w-16 border-4 border-pq-ink bg-[#fff1b8] shadow-[inset_-12px_-8px_0_#f2d77a]" />
+      </div>
     </div>
   );
 }
 
-export default function GalleryPage({ variant = "neon" }: { variant?: GalleryVariant }) {
+export default function GalleryPage({ variant = "pixel" }: { variant?: GalleryVariant }) {
   const t = THEMES[variant];
   const built = registry.length;
   const types = new Set(registry.map((c) => c.type)).size;
   const weeks = new Set(registry.map((c) => c.week)).size;
-  const pct = Math.round((built / TOTAL) * 100);
-  const stats = [
-    { label: "Components built", value: String(built) },
-    { label: "Different types", value: String(types) },
-    { label: "Weeks so far", value: String(weeks) },
+  const pad = (n: number, w = 4) => String(n).padStart(w, "0");
+  const hud = [
+    { label: "BUILT", value: `${pad(built)}/${pad(TOTAL)}` },
+    { label: "TYPES", value: `× ${types}` },
+    { label: "WORLD", value: `1-${weeks}` },
+    { label: "TIME", value: END_LABEL },
   ];
+
   return (
     <main className={`relative min-h-screen overflow-hidden ${t.root}`}>
-      <Background />
+      <section className="pq-sky relative">
+        <Sky />
+        <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pb-28">
+          <dl role="group" aria-label="Challenge progress" className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            {hud.map((h) => (
+              <div key={h.label}>
+                <dt className={`text-[10px] sm:text-xs ${t.statLabel}`}>{h.label}</dt>
+                <dd className={`mt-2 text-xs sm:text-sm ${t.statValue}`}>{h.value}</dd>
+              </div>
+            ))}
+          </dl>
 
-      <section className="relative mx-auto max-w-6xl px-6 pb-10 pt-16 sm:pt-24">
-        <p className={`inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium ${t.eyebrow}`}>
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> LofiStack 90 day build challenge
-        </p>
-        <h1 className="mt-6 max-w-4xl text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl">
-          <span className={t.titleA}>{t.title[0]}</span> <span className={t.titleB}>{t.title[1]}</span>
-        </h1>
-        <p className={`mt-6 max-w-2xl text-lg leading-relaxed ${t.lead}`}>
-          Every component has its own page with a live preview, a how-to, the props table and the full source. Try them, then copy the code.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
-          <a href="#gallery" className={`px-6 py-3 font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${t.focus} ${t.primary}`}>
-            Browse components
-          </a>
-          <a href={REPO} target="_blank" rel="noreferrer" className={`px-6 py-3 font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${t.focus} ${t.secondary}`}>
-            Source on GitHub
-          </a>
-        </div>
-
-        <div className="mt-12 grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-          <div className={`p-5 ${t.stat}`}>
-            <div className="flex items-baseline justify-between gap-2">
-              <p className={`text-sm font-medium ${t.statLabel}`}>Challenge progress</p>
-              <p className={`text-sm font-semibold ${t.statValue}`}>
-                {built} <span className={t.statLabel}>/ {TOTAL}</span>
-              </p>
+          <div className="mt-14 text-center sm:mt-16">
+            <h1 className="text-[34px] leading-[1.35] sm:text-6xl sm:leading-[1.3]">
+              <span className={t.titleA}>{t.title[0]}</span>
+              <br />
+              <span className={t.titleB}>{t.title[1]}</span>
+            </h1>
+            <p className={`mx-auto mt-6 max-w-3xl text-lg leading-snug sm:text-2xl ${t.lead}`}>
+              A hand-built component adventure. Every level has a live preview, a how-to, the props table and the full source.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <a href="#gallery" className={`inline-flex items-center gap-3 px-5 py-3.5 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 ${t.focus} ${t.primary}`}>
+                <span aria-hidden className="pq-blink">▶</span> PRESS START
+              </a>
+              <a href={REPO} target="_blank" rel="noreferrer" className={`px-5 py-3.5 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 ${t.focus} ${t.secondary}`}>
+                SOURCE ON GITHUB
+              </a>
             </div>
-            <div role="progressbar" aria-label="Components built" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={built} className={`mt-4 h-2.5 overflow-hidden rounded-full ${t.track}`}>
-              <div className={`h-full rounded-full ${t.fill}`} style={{ width: `${pct}%` }} />
-            </div>
-            <p className={`mt-3 text-xs ${t.statLabel}`}>{pct}% done, Oct 1 to Dec 29</p>
+            <p className={`mt-6 text-[10px] sm:text-xs ${t.muted}`}>
+              {Math.round((built / TOTAL) * 100)}% CLEAR · OCT 1 TO DEC 29
+            </p>
           </div>
-          {stats.map((s) => (
-            <div key={s.label} className={`p-5 ${t.stat}`}>
-              <p className={`text-4xl font-bold tracking-tight ${t.statValue}`}>{s.value}</p>
-              <p className={`mt-1 text-sm ${t.statLabel}`}>{s.label}</p>
-            </div>
-          ))}
         </div>
       </section>
 
-      <section id="gallery" className="relative mx-auto max-w-6xl scroll-mt-20 px-6 pb-24 pt-6">
-        <h2 className={`mb-6 text-2xl font-semibold tracking-tight ${t.h2}`}>The gallery</h2>
-        <GalleryGrid variant={variant} />
+      <section id="gallery" className="pq-ground relative scroll-mt-16 border-t-[6px] border-pq-ink">
+        <div className="mx-auto max-w-6xl px-4 pb-20 pt-14 sm:px-6">
+          <h2 className={`mb-6 text-base leading-relaxed sm:text-xl ${t.h2}`}>
+            WORLD 1 · ALL {built} LEVELS
+          </h2>
+          <GalleryGrid variant={variant} />
+        </div>
       </section>
 
-      <footer className={`relative border-t ${t.footer}`}>
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-6 text-sm sm:flex-row">
-          <p>Built for the LofiStack 90 day challenge.</p>
-          <a href={REPO} target="_blank" rel="noreferrer" className={`font-medium underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 ${t.focus} ${t.footerLink}`}>
-            View the repo
+      <footer className={`relative border-t-4 ${t.footer}`}>
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-6 text-center sm:flex-row sm:text-left">
+          <p>BUILT FOR THE LOFISTACK 90 DAY CHALLENGE</p>
+          <a href={REPO} target="_blank" rel="noreferrer" className={`underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 ${t.focus} ${t.footerLink}`}>
+            VIEW THE REPO →
           </a>
         </div>
       </footer>
