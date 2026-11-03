@@ -52,7 +52,7 @@ export default function RobotBand({
   defaultGenre = "lofi",
   demo = false,
   defaultVolume = 0.7,
-  maxSeconds = 2.5,
+  maxSeconds = 3,
   onTeach,
   onPlayChange,
   className = "",
@@ -167,49 +167,81 @@ export default function RobotBand({
       return;
     }
     const robot = ROBOTS.find((r) => r.id === role)!;
+    if (typeof MediaRecorder === "undefined") {
+      stream.getTracks().forEach((t) => t.stop());
+      setStatus("This browser can't record audio. Try the demo sounds.");
+      return;
+    }
     setRecording(role);
-    setStatus(`${robot.name} is listening… make your sound (${robot.hint}).`);
-    const src = ctx.createMediaStreamSource(stream);
-    const proc = ctx.createScriptProcessor(2048, 1, 1);
-    const sink = ctx.createGain();
-    sink.gain.value = 0;
-    const chunks: Float32Array[] = [];
-    let total = 0;
+    setStatus(`${robot.name} is listening… make your sound (${robot.hint}), then wait or press Stop.`);
+
+    // MediaRecorder captures the sound; it works in every modern browser and at any mic sample rate.
+    const rec = new MediaRecorder(stream);
+    const parts: Blob[] = [];
+    rec.ondataavailable = (e) => { if (e.data.size) parts.push(e.data); };
+
+    // A separate analyser only drives the level glow and the auto-stop. If it fails, recording still works.
+    let analyser: AnalyserNode | null = null;
+    let src: MediaStreamAudioSourceNode | null = null;
+    try {
+      src = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048;
+      src.connect(analyser);
+    } catch { analyser = null; }
+
+    const started = performance.now();
     let heard = false;
-    let quiet = 0;
+    let lastLoud = 0;
     let done = false;
+    const buf = new Float32Array(2048);
+    const meter = setInterval(() => {
+      const elapsed = (performance.now() - started) / 1000;
+      if (analyser) {
+        analyser.getFloatTimeDomainData(buf);
+        let rms = 0;
+        for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+        rms = Math.sqrt(rms / buf.length);
+        setLevel(Math.min(1, rms * 8));
+        if (rms > 0.015) { heard = true; lastLoud = elapsed; }
+        if (heard && elapsed > 0.5 && elapsed - lastLoud > 0.6) finish();
+      }
+      if (elapsed > maxSeconds) finish();
+    }, 50);
+
     const finish = () => {
       if (done) return;
       done = true;
-      proc.onaudioprocess = null;
-      src.disconnect();
-      proc.disconnect();
-      stream.getTracks().forEach((t) => t.stop());
+      clearInterval(meter);
       stopRec.current = null;
+      if (rec.state !== "inactive") rec.stop();
+      else void process();
+    };
+    const process = async () => {
+      src?.disconnect();
+      stream.getTracks().forEach((t) => t.stop());
       setRecording(null);
       setLevel(0);
-      const raw = new Float32Array(total);
-      let o = 0;
-      for (const c of chunks) { raw.set(c, o); o += c.length; }
-      const clean = cleanRecording(raw, ctx.sampleRate);
-      if (!clean) { setStatus(`${robot.name} didn't hear anything. Try again a bit louder.`); return; }
-      const pitch = detectPitch(clean, ctx.sampleRate);
-      learn(role, { data: clean, rate: ctx.sampleRate, pitch, label: "your sound" });
-      setStatus(`${robot.name} learned your sound${pitch ? ` (about ${Math.round(pitch)} Hz)` : ""}.`);
+      try {
+        const blob = new Blob(parts, { type: rec.mimeType || parts[0]?.type });
+        const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+        const raw = new Float32Array(decoded.length);
+        for (let c = 0; c < decoded.numberOfChannels; c++) {
+          const d = decoded.getChannelData(c);
+          for (let i = 0; i < d.length; i++) raw[i] += d[i] / decoded.numberOfChannels;
+        }
+        const clean = cleanRecording(raw, decoded.sampleRate);
+        if (!clean) { setStatus(`${robot.name} didn't hear anything. Check the mic, get closer and try again.`); return; }
+        const pitch = detectPitch(clean, decoded.sampleRate);
+        learn(role, { data: clean, rate: decoded.sampleRate, pitch, label: "your sound" });
+        setStatus(`${robot.name} learned your sound${pitch ? ` (about ${Math.round(pitch)} Hz)` : ""}. Press ▶ to hear it.`);
+      } catch {
+        setStatus(`Couldn't read that recording. Try again, or try another browser.`);
+      }
     };
+    rec.onstop = () => { void process(); };
     stopRec.current = finish;
-    proc.onaudioprocess = (e) => {
-      const input = e.inputBuffer.getChannelData(0);
-      chunks.push(new Float32Array(input));
-      total += input.length;
-      let rms = 0;
-      for (let i = 0; i < input.length; i++) rms += input[i] * input[i];
-      rms = Math.sqrt(rms / input.length);
-      setLevel(Math.min(1, rms * 6));
-      if (rms > 0.03) { heard = true; quiet = 0; } else if (heard) quiet += input.length;
-      if ((heard && quiet > ctx.sampleRate * 0.45) || total > ctx.sampleRate * maxSeconds) finish();
-    };
-    src.connect(proc).connect(sink).connect(ctx.destination);
+    rec.start(100);
   };
 
   const hear = (role: RoleId) => {
