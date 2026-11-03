@@ -7,6 +7,7 @@ import CatMouseDuel from "@/showcase/cat-mouse-duel";
 import GuitarStudio from "@/showcase/guitar-studio";
 import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 import TiltCard from "@/showcase/tilt-card";
+import BubbleSortPuzzle from "@/showcase/bubble-sort-puzzle";
 import MoodLightingRoom from "@/showcase/mood-lighting-room";
 
 export type ComponentType_ =
@@ -488,7 +489,6 @@ export default function Example() {
       { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
     ],
     usage: `import TiltCard from "@/showcase/tilt-card";
-import MoodLightingRoom from "@/showcase/mood-lighting-room";
 
 export default function Example() {
   return (
@@ -501,6 +501,56 @@ export default function Example() {
         { icon: "🌙", name: "Moon Glide", power: 40 },
         { icon: "🎹", name: "Soft Keys", power: 70 },
       ]}
+    />
+  );
+}`,
+  },
+  {
+    slug: "bubble-sort-puzzle",
+    name: "Bubble Sort Puzzle",
+    type: "chart",
+    week: 5,
+    description: "A puzzle game where you sort the bars yourself by swapping neighbours, and try to match the moves of my Python bubble_sort.",
+    Component: BubbleSortPuzzle,
+    previewScale: 0.4,
+    previewWidth: 760,
+    date: "2026-11-03",
+    summary:
+      "A small puzzle game built on my Python bubble_sort. You sort the bars by hand: tap a bar, then tap the bar next to it to swap them. Only neighbours can swap, just like in bubble sort. The game counts your moves and time and compares them with the number of swaps the code makes, which is also the fewest moves possible. Match it for 3 stars. Bars lock in green when they reach their final spot, a wrong swap shakes red, Hint lights up the pair the code would swap next, and levels add more bars as you win. When you are curious, press \"Show me how the code does it\" to watch the real code sort the same puzzle step by step.",
+    features: [
+      "Tap a bar, then its neighbour to swap. Only neighbour swaps, like bubble sort",
+      "Best score comes from the code: the number of swaps bubble_sort makes",
+      "3, 2 or 1 stars depending on how close you get to the code",
+      "Bars lock in green once they are in their final place",
+      "Wrong swaps shake red, Undo takes them back",
+      "Hint lights up the pair the code would swap next",
+      "Levels from 6 up to 14 bars, plus New puzzle",
+      "Watch mode: an animated run of the real Python code on the same puzzle, with the running line lit up",
+      "Keyboard play (Tab to a bar, Enter to pick, arrow keys to swap), screen reader messages, reduced-motion support, works on phones",
+    ],
+    howToUse: [
+      "Tap any bar to pick it. It lifts up and turns pink.",
+      "Tap the bar right next to it to swap them. Keep going until the bars go from small to big.",
+      "Try to finish in the Best number of moves (what the code needs) for 3 stars.",
+      "Stuck? Press Hint. Made a mistake? Press Undo.",
+      "Press Next level for more bars, or Show me how the code does it to watch bubble_sort solve it.",
+    ],
+    tech: ["React", "TypeScript", "CSS transitions"],
+    files: ["bubble-sort-puzzle.tsx", "bubble-sort-bars.tsx"],
+    props: [
+      { name: "startLevel", type: "number", default: "1", description: "Level to start on. Level 1 has 6 bars, each level adds one, up to 14." },
+      { name: "showWatch", type: "boolean", default: "true", description: "Show the button that plays the code's own run of the puzzle." },
+      { name: "onWin", type: "(result: BubbleSortPuzzleResult) => void", default: "undefined", description: "Called with level, bars, moves, best, stars and seconds when a puzzle is solved." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import BubbleSortPuzzle from "@/showcase/bubble-sort-puzzle";
+import MoodLightingRoom from "@/showcase/mood-lighting-room";
+
+export default function Example() {
+  return (
+    <BubbleSortPuzzle
+      startLevel={2}
+      onWin={(r) => console.log(\`Level \${r.level}: \${r.stars} stars in \${r.moves} moves\`)}
     />
   );
 }`,
