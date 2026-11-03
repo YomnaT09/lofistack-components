@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { runCartoon, type CartoonStyle } from "./polaroid-cartoon-filter";
+import { runLook, type PhotoLook } from "./polaroid-looks";
 
-export type PolaroidStyle = "original" | CartoonStyle;
+export type PolaroidStyle = "original" | PhotoLook;
 
-export interface PolaroidCartoonCameraProps {
+export interface PolaroidSnapCameraProps {
   /** Look the photo prints in. The user can switch it after printing. */
   defaultStyle?: PolaroidStyle;
   /** Text written under the photo. The user can edit it. */
@@ -24,16 +24,15 @@ export interface PolaroidCartoonCameraProps {
 type Phase = "idle" | "printing" | "developing" | "done";
 
 const STYLES: { id: PolaroidStyle; tag: string; name: string }[] = [
-  { id: "comic", tag: "A", name: "Comic Ink" },
-  { id: "toon", tag: "B", name: "Soft Toon" },
-  { id: "story", tag: "C", name: "Storybook" },
+  { id: "glow", tag: "1", name: "Dreamy Glow" },
+  { id: "halftone", tag: "2", name: "Pop Dots" },
+  { id: "bw", tag: "3", name: "B&W Film" },
   { id: "original", tag: "○", name: "Original" },
 ];
 
-// The photo is processed at this size (about 1.75x the size it is shown at), cropped to fill.
-// Smaller than full resolution on purpose: the cartoon lines and colour blobs read bolder.
-const PW = 384;
-const PH = 320;
+// The photo is processed at this size (about 2.6x the size it is shown at), cropped to fill.
+const PW = 576;
+const PH = 480;
 const HAND = `"Segoe Print", "Bradley Hand", "Comic Sans MS", "Chalkboard SE", cursive`;
 
 // A little drawn lofi desk, used for "Try a sample". Drawn here so the repo ships no third-party photos.
@@ -92,15 +91,15 @@ function shutterClick() {
   }
 }
 
-export default function PolaroidCartoonCamera({
-  defaultStyle = "comic",
+export default function PolaroidSnapCamera({
+  defaultStyle = "glow",
   defaultCaption = "",
   developMs = 4200,
   autoSample = false,
   sound = true,
   onPrint,
   className = "",
-}: PolaroidCartoonCameraProps) {
+}: PolaroidSnapCameraProps) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [style, setStyle] = useState<PolaroidStyle>(defaultStyle);
   const [busyStyle, setBusyStyle] = useState<PolaroidStyle | null>(null);
@@ -144,7 +143,7 @@ export default function PolaroidCartoonCamera({
     const hit = cache.current[s];
     if (hit) return hit;
     const src = source.current!;
-    const url = s === "original" ? toUrl(src) : toUrl(await runCartoon(src, s));
+    const url = s === "original" ? toUrl(src) : toUrl(await runLook(src, s));
     cache.current[s] = url;
     return url;
   }, []);
@@ -250,8 +249,7 @@ export default function PolaroidCartoonCamera({
   const download = async () => {
     if (!photo) return;
     const img = await loadImage(photo);
-    // Saved at 2x so the frame and caption stay crisp.
-    const k = 2, w = PW * k, h = PH * k, pad = 30 * k, bottom = 96 * k;
+    const k = 1.5, w = PW, h = PH, pad = 30 * k, bottom = 96 * k;
     const c = document.createElement("canvas");
     c.width = w + pad * 2;
     c.height = h + pad + bottom;
@@ -317,7 +315,7 @@ export default function PolaroidCartoonCamera({
                 style={{ ["--dev" as string]: dev.current }}
               >
                 <div className="ppc-photo">
-                  {photo && <img src={photo} alt={`Your photo in the ${STYLES.find((s) => s.id === style)?.name} style`} draggable={false} />}
+                  {photo && <img src={photo} alt={`Your photo in the ${STYLES.find((s) => s.id === style)?.name} look`} draggable={false} />}
                   {busyStyle && <div className="ppc-busy">redrawing…</div>}
                 </div>
                 <div className="ppc-cap">{caption || " "}</div>
@@ -345,8 +343,8 @@ export default function PolaroidCartoonCamera({
           </label>
           <button type="button" className="ppc-link" onClick={() => print(SAMPLE_URL)}>Try a sample photo</button>
 
-          <div className="ppc-group" role="radiogroup" aria-label="Cartoon style">
-            <div className="ppc-label">Style</div>
+          <div className="ppc-group" role="radiogroup" aria-label="Photo look">
+            <div className="ppc-label">Look</div>
             <div className="ppc-styles">
               {STYLES.map((s) => (
                 <button

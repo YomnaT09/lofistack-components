@@ -10,7 +10,7 @@ import TiltCard from "@/showcase/tilt-card";
 import BubbleSortPuzzle from "@/showcase/bubble-sort-puzzle";
 import MoodLightingRoom from "@/showcase/mood-lighting-room";
 import LofiRadioTuner from "@/showcase/lofi-radio-tuner";
-import PolaroidCartoonCamera from "@/showcase/polaroid-cartoon-camera";
+import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -668,24 +668,24 @@ export default function Example() {
 }`,
   },
   {
-    slug: "polaroid-cartoon-camera",
-    name: "Polaroid Cartoon Camera",
+    slug: "polaroid-snap-camera",
+    name: "Polaroid Snap Camera",
     type: "card",
     week: 6,
-    description: "Upload any photo and a retro instant camera flashes, prints it, and the picture slowly develops as a cartoon. Three cartoon styles, a caption and PNG download.",
-    Component: PolaroidCartoonCamera,
+    description: "Upload any photo and a retro instant camera flashes, prints it, and the picture slowly develops in a Dreamy Glow, Pop Dots or B&W Film look. Add a caption and download it.",
+    Component: PolaroidSnapCamera,
     previewProps: { autoSample: true, sound: false, defaultCaption: "late night desk ✿" },
     previewWidth: 760,
     previewScale: 0.36,
     date: "2026-11-03",
     summary:
-      "A cream instant camera that turns your photos into cartoons. Upload a photo (click, drag and drop, or paste), the flash goes off with a little shutter click, and a print slides out of the slot. It starts blank and milky, then slowly develops into a cartoon version of your picture, and you can shake it with the mouse or your finger to make it develop faster. Pick from three looks: Comic Ink with bold black outlines and flat colours, Soft Toon with smooth bright colours and light outlines, and Storybook with pastel colours and brown pencil lines, or switch back to the original. Write a caption in handwriting under the photo and download the whole Polaroid as a PNG. The cartoon effect is made right in your browser with canvas maths (edge-preserving smoothing, soft colour bands and outline detection) inside a Web Worker, so it is fast, free and your photo never leaves your device.",
+      "A cream instant camera for your own photos. Upload a photo (click, drag and drop, or paste), the flash goes off with a little shutter click, and a print slides out of the slot. It starts blank and milky, then slowly develops, and you can shake it with the mouse or your finger to make it develop faster. Pick a look: Dreamy Glow adds a soft bloom and a pink-violet haze, Pop Dots re-prints the photo as comic-book halftone dots, and B&W Film turns it into contrasty black and white with grain and a vignette, or keep the Original. Write a caption in handwriting under the photo and download the whole Polaroid as a PNG. The looks are made right in your browser with canvas maths inside a Web Worker, so it is fast, free and your photo never leaves your device.",
     features: [
       "Upload by clicking, drag and drop, or pasting an image, plus a built-in sample photo to try",
       "Flash, shutter click and a print that slides out of the camera slot",
       "The print develops from blank to full colour, and shaking it speeds it up",
-      "Three cartoon styles (Comic Ink, Soft Toon, Storybook) plus Original, switchable after printing",
-      "Cartoon effect runs in a Web Worker: bilateral smoothing, soft colour quantizing and difference-of-Gaussians outlines",
+      "Three looks (Dreamy Glow, Pop Dots, B&W Film) plus Original, switchable after printing",
+      "Looks run in a Web Worker: Gaussian bloom with screen blending, anti-aliased halftone dots, and a film-style black and white with grain and vignette",
       "Handwritten caption under the photo, up to 28 characters",
       "Download the finished Polaroid, frame and caption included, as a PNG",
       "Private by design: the photo is never uploaded anywhere",
@@ -695,13 +695,13 @@ export default function Example() {
       "Press the red button on the camera or Upload a photo. You can also drag a photo in or paste one.",
       "Watch the flash and the print slide out.",
       "Move your mouse or finger back and forth over the photo to shake it while it develops.",
-      "Switch between A, B and C to pick the cartoon look you like.",
+      "Switch between Dreamy Glow, Pop Dots, B&W Film and Original.",
       "Write a caption, then Download PNG to save your Polaroid.",
     ],
     tech: ["React", "TypeScript", "Canvas 2D", "Web Workers", "Web Audio API", "CSS animations"],
-    files: ["polaroid-cartoon-camera.tsx", "polaroid-cartoon-filter.ts"],
+    files: ["polaroid-snap-camera.tsx", "polaroid-looks.ts"],
     props: [
-      { name: "defaultStyle", type: '"comic" | "toon" | "story" | "original"', default: '"comic"', description: "Look the photo prints in. The user can switch it after printing." },
+      { name: "defaultStyle", type: '"glow" | "halftone" | "bw" | "original"', default: '"glow"', description: "Look the photo prints in. The user can switch it after printing." },
       { name: "defaultCaption", type: "string", default: '""', description: "Text written under the photo. The user can edit it." },
       { name: "developMs", type: "number", default: "4200", description: "How long the print takes to develop, in ms. Shaking speeds it up." },
       { name: "autoSample", type: "boolean", default: "false", description: "Print the built-in sample photo as soon as the camera appears." },
@@ -709,14 +709,14 @@ export default function Example() {
       { name: "onPrint", type: "(style) => void", default: "undefined", description: "Called once a print has fully developed." },
       { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
     ],
-    usage: `import PolaroidCartoonCamera from "@/showcase/polaroid-cartoon-camera";
+    usage: `import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
 
 export default function Example() {
   return (
-    <PolaroidCartoonCamera
-      defaultStyle="toon"
-      defaultCaption="me, but cartoon ✿"
-      onPrint={(style) => console.log("Printed in", style)}
+    <PolaroidSnapCamera
+      defaultStyle="bw"
+      defaultCaption="quiet room ✿"
+      onPrint={(look) => console.log("Printed in", look)}
     />
   );
 }`,
