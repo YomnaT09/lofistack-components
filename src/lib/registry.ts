@@ -612,18 +612,20 @@ export default function Example() {
     name: "Lofi Radio Tuner",
     type: "input",
     week: 6,
-    description: "A wooden retro radio. Turn the knob to scan the dial, hear static between stations, and lock onto five lofi stations that each change the mood.",
+    description: "A wooden retro radio. Turn the knob to scan the dial, hear faint music through the static, lock onto five lofi stations and hunt for four hidden ones.",
     Component: LofiRadioTuner,
     previewWidth: 560,
     previewScale: 0.42,
     date: "2026-11-03",
     summary:
-      "A cozy wooden radio you actually tune. Drag the big knob (or scroll, or use the arrow keys) and the red needle slides across the 88 to 108 FM dial. Between stations you hear and see static; as you get close to a station the static fades, the name un-scrambles and the signal bars fill up. Each of the five stations plays its own generated lofi loop with its own ambience (rain, crickets, waves or a crackling fire), shows its own little animated scene, and recolours the whole radio's glow. All the sound is made live in the browser with the Web Audio API, so there are no audio files.",
+      "A cozy wooden radio you actually tune. Drag the big knob (or scroll, or use the arrow keys) and the red needle slides across the 88 to 108 FM dial. Between stations you hear and see static; as you get close to a station the static fades, the name un-scrambles and the signal bars fill up. Each of the five stations plays its own generated lofi loop with its own ambience (rain, crickets, waves or a crackling fire), shows its own little animated scene, and recolours the whole radio's glow. The static is never silent: the nearest station leaks through faintly and muffled, getting clearer as you get closer. Four secret stations (Music Box, 8-bit Arcade, Old Piano Bar and Space Echo) hide in the gaps as \"?\" marks with a narrower signal; find one and it turns into a ★, and finding all four sets off confetti. All the sound is made live in the browser with the Web Audio API, so there are no audio files.",
     features: [
       "Drag-to-turn tuning knob with scroll wheel and full keyboard support (arrows, Page Up/Down to jump stations, Home/End)",
       "Real tuning feel: static fades out and the music fades in as the needle gets close to a station",
       "Station name scrambles on a weak signal and clears up when you lock on, with a 5-bar signal meter",
       "Five stations: Rain Café, Night Drive, Sunday Study, Ocean Tapes and Fireplace FM, each with its own colour, scene and sound",
+      "Faint, muffled music leaks through the static from the nearest station, so the dial is never silent",
+      "Four hidden stations with their own sound (music box, chiptune, piano bar, space pads) and scenes, a ★ found counter and confetti when you find them all",
       "Lofi music generated live with Web Audio: swung drums, soft chord pads, random melody notes and vinyl dust, plus rain, crickets, waves or fire crackle",
       "Animated scene window (rain, stars and moon, sun and clouds, waves, fireplace) with TV-style snow on static",
       "Click anywhere on the dial to jump there, or use the ◀ ▶ seek buttons; power button and volume slider",
@@ -636,13 +638,16 @@ export default function Example() {
       "Listen for the static to clear and watch the station name sharpen up.",
       "Use ◀ ▶ to jump straight to the previous or next station.",
       "Try all five stations and watch the scene and colours change.",
+      "Listen for faint music in the static and hunt down the four ? hidden stations.",
     ],
     tech: ["React", "TypeScript", "Web Audio API", "CSS animations"],
     props: [
       { name: "defaultFrequency", type: "number", default: "97.7", description: "Where the needle starts, from 88 to 108." },
       { name: "stations", type: "RadioStation[]", default: "DEFAULT_STATIONS", description: "Stations on the dial: freq, name, vibe, color, scene, bpm and root note." },
+      { name: "hiddenStations", type: "RadioStation[]", default: "DEFAULT_HIDDEN_STATIONS", description: "Secret stations hidden in the static, shown as ? until found. Pass [] to turn them off." },
       { name: "defaultVolume", type: "number", default: "0.6", description: "Start volume, 0 to 1." },
       { name: "onTune", type: "(station: RadioStation | null, frequency: number) => void", default: "undefined", description: "Called when you lock onto a station, or drift off one (station is null on static)." },
+      { name: "onFind", type: "(station: RadioStation, found: number, total: number) => void", default: "undefined", description: "Called the first time each hidden station is found." },
       { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
     ],
     usage: `import LofiRadioTuner, { DEFAULT_STATIONS } from "@/showcase/lofi-radio-tuner";
@@ -655,6 +660,7 @@ export default function Example() {
         ...DEFAULT_STATIONS,
         { freq: 99.9, name: "Yomna FM", vibe: "my own station", color: "#ff8fb1", scene: "night", bpm: 75, root: 58 },
       ]}
+      onFind={(s, n, total) => console.log(\`Found \${s.name} (\${n}/\${total})\`)}
       onTune={(s, f) => console.log(s ? \`Tuned to \${s.name}\` : \`Static at \${f}\`)}
     />
   );
