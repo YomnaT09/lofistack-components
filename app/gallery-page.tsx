@@ -1,5 +1,6 @@
 import { registry } from "@/lib/registry";
 import { REPO } from "@/lib/source";
+import BugFixerHero from "./bug-fixer";
 import GalleryGrid from "./gallery-grid";
 import { THEMES, type GalleryVariant } from "./themes";
 
@@ -54,16 +55,7 @@ export default function GalleryPage({ variant = "pixel" }: { variant?: GalleryVa
     <main className={`relative min-h-screen overflow-hidden ${t.root}`}>
       <section className="pq-sky relative">
         <Sky />
-        <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pb-28">
-          <dl role="group" aria-label="Challenge progress" className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-            {hud.map((h) => (
-              <div key={h.label}>
-                <dt className={`text-[10px] sm:text-xs ${t.statLabel}`}>{h.label}</dt>
-                <dd className={`mt-2 text-xs sm:text-sm ${t.statValue}`}>{h.value}</dd>
-              </div>
-            ))}
-          </dl>
-
+        <BugFixerHero idleHud={hud} repo={REPO}>
           <div className="mt-14 text-center sm:mt-16">
             <h1 className="text-[34px] leading-[1.35] sm:text-6xl sm:leading-[1.3]">
               <span className={t.titleA}>{t.title[0]}</span>
@@ -73,19 +65,11 @@ export default function GalleryPage({ variant = "pixel" }: { variant?: GalleryVa
             <p className={`mx-auto mt-6 max-w-3xl text-lg leading-snug sm:text-2xl ${t.lead}`}>
               A hand-built component adventure. Every level has a live preview, a how-to, the props table and the full source.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <a href="#gallery" className={`inline-flex items-center gap-3 px-5 py-3.5 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 ${t.focus} ${t.primary}`}>
-                <span aria-hidden className="pq-blink">▶</span> PRESS START
-              </a>
-              <a href={REPO} target="_blank" rel="noreferrer" className={`px-5 py-3.5 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 ${t.focus} ${t.secondary}`}>
-                SOURCE ON GITHUB
-              </a>
-            </div>
-            <p className={`mt-6 text-[10px] sm:text-xs ${t.muted}`}>
+            <p className={`mt-4 text-[10px] sm:text-xs ${t.muted}`}>
               {Math.round((built / TOTAL) * 100)}% CLEAR · OCT 1 TO DEC 29
             </p>
           </div>
-        </div>
+        </BugFixerHero>
       </section>
 
       <section id="gallery" className="pq-ground relative scroll-mt-16 border-t-[6px] border-pq-ink">
