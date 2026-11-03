@@ -19,7 +19,7 @@ const TYPE_STYLE: Record<ComponentType_, { badge: string; dot: string }> = {
   input: { badge: "border-teal-400/40 bg-teal-400/10 text-teal-200", dot: "bg-teal-400" },
 };
 
-export default function GalleryGrid({ variant = "neon" }: { variant?: GalleryVariant }) {
+export default function GalleryGrid({ variant = "pixel" }: { variant?: GalleryVariant }) {
   const t = THEMES[variant];
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ComponentType_ | "all">("all");
@@ -36,9 +36,7 @@ export default function GalleryGrid({ variant = "neon" }: { variant?: GalleryVar
     .filter(({ item }) => (type === "all" || item.type === type) && (!q || `${item.name} ${item.description} ${item.type}`.toLowerCase().includes(q)));
 
   const chip = (active: boolean) =>
-    `inline-flex items-center gap-1.5 border px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${t.focus} ${
-      ""
-    } ${active ? t.chipOn : t.chipOff}`;
+    `inline-flex items-center gap-2 px-3 py-2 text-[10px] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${t.focus} ${active ? t.chipOn : t.chipOff}`;
 
   return (
     <div>
@@ -49,15 +47,15 @@ export default function GalleryGrid({ variant = "neon" }: { variant?: GalleryVar
           </button>
           {types.map(([tp, count]) => (
             <button key={tp} type="button" aria-pressed={type === tp} onClick={() => setType(tp)} className={chip(type === tp)}>
-              <span aria-hidden className={`h-2 w-2 rounded-full ${TYPE_STYLE[tp].dot}`} />
-              <span className="capitalize">{tp}</span>
+              <span aria-hidden className={`h-2 w-2 border border-pq-ink ${TYPE_STYLE[tp].dot}`} />
+              <span>{tp}</span>
               <span className={type === tp ? t.chipCount[0] : t.chipCount[1]}>{count}</span>
             </button>
           ))}
         </div>
         <label className="relative block w-full lg:w-72">
           <span className="sr-only">Search components</span>
-          <svg aria-hidden viewBox="0 0 20 20" className={`pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 ${t.muted}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <svg aria-hidden viewBox="0 0 20 20" className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-pq-label" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="9" cy="9" r="6" />
             <path d="m14 14 4 4" />
           </svg>
@@ -66,18 +64,18 @@ export default function GalleryGrid({ variant = "neon" }: { variant?: GalleryVar
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search components"
-            className={`w-full py-2.5 pl-10 pr-4 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${t.focus} ${t.search}`}
+            className={`w-full py-2.5 pl-10 pr-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${t.focus} ${t.search}`}
           />
         </label>
       </div>
 
-      <p role="status" aria-live="polite" className={`mt-5 text-sm ${t.muted}`}>
-        Showing {shown.length} of {registry.length} components
+      <p role="status" aria-live="polite" className={`mt-6 text-[10px] uppercase leading-relaxed ${t.muted}`}>
+        Showing {shown.length} of {registry.length} levels
       </p>
 
       {shown.length === 0 ? (
-        <div className={`mt-6 rounded-2xl border border-dashed p-10 text-center ${t.emptyBox}`}>
-          No component matches that search.{" "}
+        <div className={`mt-6 p-10 text-center text-lg ${t.emptyBox}`}>
+          No level matches that search.{" "}
           <button type="button" onClick={() => { setQuery(""); setType("all"); }} className={`font-semibold underline underline-offset-4 focus-visible:outline focus-visible:outline-2 ${t.focus} ${t.clear}`}>
             Clear filters
           </button>
@@ -88,27 +86,27 @@ export default function GalleryGrid({ variant = "neon" }: { variant?: GalleryVar
             <Link
               key={slug}
               href={`/components/${slug}`}
-              className={`group relative flex flex-col p-3 transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${t.focus} ${t.card}`}
+              className={`group relative flex flex-col transition duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${t.focus} ${t.card}`}
             >
-              <div className={`pointer-events-none relative flex h-56 items-center justify-center overflow-hidden ${t.stage}`}>
+              <div className={`pointer-events-none relative flex h-52 items-center justify-center overflow-hidden ${t.stage}`}>
                 <div aria-hidden className={`absolute inset-0 ${t.stageGrid}`} />
                 <div aria-hidden inert className={`relative ${previewWidth ? "shrink-0" : ""}`} style={{ transform: `scale(${previewScale ?? 0.6})`, width: previewWidth }}>
                   <Component {...previewProps} />
                 </div>
-                <span className={`absolute left-3 top-3 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${t.num}`}>
-                  #{String(n).padStart(2, "0")}
+                <span className={`absolute left-3 top-3 px-2 py-1 text-[10px] ${t.num}`}>
+                  1-{n}
                 </span>
               </div>
-              <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
+              <div className="flex flex-1 flex-col px-4 pb-4 pt-4">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className={`text-lg font-semibold tracking-tight ${t.cardTitle}`}>{name}</h3>
-                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${t.badge || TYPE_STYLE[ty].badge}`}>{ty}</span>
+                  <h3 className={`text-xl font-semibold leading-tight ${t.cardTitle}`}>{name}</h3>
+                  <span className={`shrink-0 px-2 py-1 ${t.badge || TYPE_STYLE[ty].badge}`}>{ty}</span>
                 </div>
-                <p className={`mt-1.5 flex-1 text-sm leading-relaxed ${t.cardDesc}`}>{description}</p>
-                <div className={`mt-4 flex items-center justify-between border-t pt-3 text-xs ${t.cardFoot}`}>
+                <p className={`mt-2 flex-1 text-base leading-snug ${t.cardDesc}`}>{description}</p>
+                <div className={`mt-4 flex items-center justify-between border-t-2 border-dashed pt-3 text-[9px] uppercase ${t.cardFoot}`}>
                   <span>Week {String(week).padStart(2, "0")}</span>
                   <span className={`inline-flex items-center gap-1 font-semibold transition group-hover:gap-2 ${t.cardLink}`}>
-                    View live + code <span aria-hidden>→</span>
+                    Play + code <span aria-hidden>▶</span>
                   </span>
                 </div>
               </div>
