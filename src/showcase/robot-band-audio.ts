@@ -272,8 +272,8 @@ export function stepTime(genre: Genre, step: number) {
 export function cleanRecording(raw: Float32Array, rate: number): Float32Array<ArrayBuffer> | null {
   let peak = 0;
   for (let i = 0; i < raw.length; i++) peak = Math.max(peak, Math.abs(raw[i]));
-  if (peak < 0.012) return null;
-  const th = Math.max(0.008, peak * 0.08);
+  if (peak < 0.003) return null;
+  const th = Math.max(0.002, peak * 0.08);
   let a = 0;
   while (a < raw.length && Math.abs(raw[a]) < th) a++;
   let b = raw.length - 1;
