@@ -7,6 +7,7 @@ import CatMouseDuel from "@/showcase/cat-mouse-duel";
 import GuitarStudio from "@/showcase/guitar-studio";
 import ProgressStepsLoader from "@/showcase/progress-steps-loader";
 import TiltCard from "@/showcase/tilt-card";
+import MoodLightingRoom from "@/showcase/mood-lighting-room";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -487,6 +488,7 @@ export default function Example() {
       { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
     ],
     usage: `import TiltCard from "@/showcase/tilt-card";
+import MoodLightingRoom from "@/showcase/mood-lighting-room";
 
 export default function Example() {
   return (
@@ -499,6 +501,57 @@ export default function Example() {
         { icon: "🌙", name: "Moon Glide", power: 40 },
         { icon: "🎹", name: "Soft Keys", power: 70 },
       ]}
+    />
+  );
+}`,
+  },
+  {
+    slug: "mood-lighting-room",
+    name: "Cozy Mood Lighting",
+    type: "card",
+    week: 5,
+    description: "A cozy decorated room where you switch the lamp, fairy lights, laptop and ceiling light on and off, flip day and night, and watch the mood change.",
+    Component: MoodLightingRoom,
+    previewWidth: 640,
+    previewScale: 0.5,
+    date: "2026-11-03",
+    summary:
+      "A small lofi bedroom with a floor lamp, fairy lights, a desk with a laptop, a beanbag with a sleepy cat and a plant. Turn each light on or off, switch the window between day and night, and slide the warmth from cool blue to warm gold. The room fades between looks, the lights glow on the walls, and a label names the mood you made, like Late-night study or Cozy lofi evening. When every light is off at night, only the cat's eyes are left glowing.",
+    features: [
+      "Four lights you can switch on and off: floor lamp, fairy lights, laptop glow and ceiling light",
+      "Day and night window with sun and clouds or moon and stars, plus a sunbeam on the floor by day",
+      "Warmth slider that recolours the lamp, fairy lights and ceiling light from cool blue to warm gold",
+      "Live mood label that changes with your setup",
+      "Study, Chill, Sleep and Sunny presets in one click",
+      "Click the lamp, laptop, fairy lights or ceiling light inside the room to toggle them too",
+      "Small details: twinkling fairy lights, steaming mug, swishing cat tail and glowing cat eyes in the dark",
+      "Keyboard friendly switches, reduced-motion support, and the panel drops under the room on small screens",
+    ],
+    howToUse: [
+      "Flip the switches in the Lights & mood panel to turn lights on and off.",
+      "Pick Day or Night to change the window and how dark the room gets.",
+      "Drag the Warmth slider to make the light cooler or warmer.",
+      "Try a preset like Study or Chill, or click a lamp in the room itself.",
+      "Turn every light off at night and look for the cat.",
+    ],
+    tech: ["React", "TypeScript", "SVG", "CSS transitions"],
+    props: [
+      { name: "defaultLights", type: "Partial<RoomLights>", default: "lamp, fairy and laptop on", description: "Which lights are on at the start." },
+      { name: "defaultTime", type: '"day" | "night"', default: '"night"', description: "Day or night outside the window at the start." },
+      { name: "defaultWarmth", type: "number", default: "70", description: "Start colour of the lights, 0 (cool) to 100 (warm)." },
+      { name: "showPresets", type: "boolean", default: "true", description: "Show the Study, Chill, Sleep and Sunny buttons." },
+      { name: "onChange", type: "(state: MoodRoomState) => void", default: "undefined", description: "Called with the lights, time, warmth and mood after every change." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import MoodLightingRoom from "@/showcase/mood-lighting-room";
+
+export default function Example() {
+  return (
+    <MoodLightingRoom
+      defaultTime="night"
+      defaultWarmth={85}
+      defaultLights={{ lamp: true, fairy: true, laptop: false }}
+      onChange={(s) => console.log(s.mood)}
     />
   );
 }`,
