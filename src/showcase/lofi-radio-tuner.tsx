@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export type RadioScene = "rain" | "night" | "sun" | "waves" | "fire";
+export type RadioScene = "rain" | "night" | "sun" | "waves" | "fire" | "notes" | "pixels" | "keys" | "space";
+export type RadioSound = "lofi" | "musicbox" | "chip" | "piano" | "space";
 
 export interface RadioStation {
   /** Frequency in MHz, between 88 and 108. */
@@ -18,6 +19,10 @@ export interface RadioStation {
   bpm: number;
   /** Root note of the loop as a MIDI number (57 = A3). */
   root: number;
+  /** Which instrument set plays. Defaults to "lofi". */
+  sound?: RadioSound;
+  /** Hidden stations show a "?" on the dial until you find them, and have a narrower signal. */
+  hidden?: boolean;
 }
 
 export interface LofiRadioTunerProps {
@@ -25,10 +30,14 @@ export interface LofiRadioTunerProps {
   defaultFrequency?: number;
   /** Your own stations. Defaults to the five LofiStack stations. */
   stations?: RadioStation[];
+  /** Secret stations hidden in the static. Pass [] to turn them off. */
+  hiddenStations?: RadioStation[];
   /** Start volume, 0 to 1. */
   defaultVolume?: number;
   /** Called when the tuned station changes. station is null while you are on static. */
   onTune?: (station: RadioStation | null, frequency: number) => void;
+  /** Called the first time each hidden station is found. */
+  onFind?: (station: RadioStation, found: number, total: number) => void;
   className?: string;
 }
 
@@ -40,24 +49,42 @@ export const DEFAULT_STATIONS: RadioStation[] = [
   { freq: 105.9, name: "Fireplace FM", vibe: "crackling fire, sleepy chords", color: "#ff9b6a", scene: "fire", bpm: 60, root: 52 },
 ];
 
+export const DEFAULT_HIDDEN_STATIONS: RadioStation[] = [
+  { freq: 91.3, name: "Music Box", vibe: "a tiny tune from a wind-up box", color: "#ff9ec0", scene: "notes", bpm: 92, root: 64, sound: "musicbox", hidden: true },
+  { freq: 95.4, name: "8-bit Arcade", vibe: "chiptune from an old game cabinet", color: "#7cf27c", scene: "pixels", bpm: 112, root: 57, sound: "chip", hidden: true },
+  { freq: 99.5, name: "Old Piano Bar", vibe: "late-night keys and soft brushes", color: "#f0c987", scene: "keys", bpm: 76, root: 55, sound: "piano", hidden: true },
+  { freq: 103.6, name: "Space Echo", vibe: "floating pads from far away", color: "#8fb8ff", scene: "space", bpm: 56, root: 50, sound: "space", hidden: true },
+];
+
 const MIN = 88;
 const MAX = 108;
 const SWEEP = 300; // degrees the knob turns across the whole band
 const LOCK = 0.9; // MHz away from a station where the signal fades out
+const HIDDEN_LOCK = 0.45; // hidden stations are harder to catch
+const BLEED = 2.6; // MHz: how far a station's music still leaks faintly through the static
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
-/** Signal strength 0..1 for a frequency, plus the closest station. */
+/**
+ * What the radio hears at a frequency: the station it is tuned to (or the closest one),
+ * its signal strength 0..1, and how loud that station's music leaks through the static (bleed).
+ */
 export function tuneTo(freq: number, stations: RadioStation[]) {
-  let best: RadioStation | null = null;
+  let closest: RadioStation | null = null;
   let dist = Infinity;
+  let best: RadioStation | null = null;
+  let strength = 0;
   for (const s of stations) {
     const d = Math.abs(s.freq - freq);
-    if (d < dist) { dist = d; best = s; }
+    if (d < dist) { dist = d; closest = s; }
+    const raw = clamp(1 - d / (s.hidden ? HIDDEN_LOCK : LOCK), 0, 1);
+    const smooth = raw * raw * (3 - 2 * raw);
+    if (smooth > strength) { strength = smooth; best = s; }
   }
-  const strength = best ? clamp(1 - dist / LOCK, 0, 1) : 0;
-  return { nearest: best, strength: strength * strength * (3 - 2 * strength) };
+  const reach = closest?.hidden ? BLEED * 0.6 : BLEED;
+  const bleed = closest ? 0.3 * clamp(1 - dist / reach, 0, 1) : 0;
+  return { nearest: best ?? closest, strength, bleed };
 }
 
 /* ------------------------------------------------------------------ */
@@ -77,6 +104,7 @@ class RadioEngine {
   ctx: AudioContext;
   master: GainNode;
   music: GainNode;
+  tone: BiquadFilterNode;
   stat: GainNode;
   amb: GainNode;
   ambFilter: BiquadFilterNode;
@@ -101,7 +129,7 @@ class RadioEngine {
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
 
     // Music bus: warm low-pass like an old speaker.
-    const tone = ctx.createBiquadFilter();
+    const tone = (this.tone = ctx.createBiquadFilter());
     tone.type = "lowpass";
     tone.frequency.value = 2200;
     this.music = ctx.createGain();
@@ -145,15 +173,20 @@ class RadioEngine {
     return s;
   }
 
-  set(volume: number, strength: number, station: RadioStation | null) {
+  set(volume: number, strength: number, bleed: number, station: RadioStation | null) {
     const t = this.ctx.currentTime;
     this.master.gain.setTargetAtTime(volume, t, 0.05);
-    this.music.gain.setTargetAtTime(strength, t, 0.05);
+    // Far from a station the music is quiet and muffled, like it is coming from another room.
+    this.music.gain.setTargetAtTime(Math.max(strength, bleed), t, 0.05);
+    this.tone.frequency.setTargetAtTime(380 + strength * 1900, t, 0.05);
     this.stat.gain.setTargetAtTime(Math.pow(1 - strength, 1.4) * 0.22, t, 0.05);
     if (station !== this.station) {
       this.station = station;
       const scene = station?.scene;
-      const amb = { rain: [1400, 0.22, 0], waves: [520, 0.25, 0.2], fire: [3200, 0.035, 0], night: [600, 0.02, 0], sun: [800, 0.015, 0] } as const;
+      const amb = {
+        rain: [1400, 0.22, 0], waves: [520, 0.25, 0.2], fire: [3200, 0.035, 0], night: [600, 0.02, 0], sun: [800, 0.015, 0],
+        notes: [900, 0.01, 0], pixels: [800, 0, 0], keys: [700, 0.02, 0], space: [300, 0.06, 0.05],
+      } as const;
       const [f, g, l] = scene ? amb[scene] : [800, 0, 0];
       this.ambFilter.frequency.setTargetAtTime(f, t, 0.1);
       this.amb.gain.setTargetAtTime(g, t, 0.1);
@@ -171,11 +204,35 @@ class RadioEngine {
       const swing = step % 2 ? eighth * 0.18 : 0;
       const t = this.nextBeat + swing;
       const chord = CHORDS[Math.floor(step / 8)];
-      if (step % 8 === 0) chord.forEach((n) => this.pad(hz(s.root + n), t, eighth * 8));
-      if (step % 8 === 0 || step % 8 === 5) this.kick(t);
-      if (step % 8 === 4) this.snare(t);
-      if (step % 2 === 1) this.hat(t);
-      if (Math.random() < 0.3) this.pluck(hz(s.root + 12 + PENTA[Math.floor(Math.random() * PENTA.length)]), t);
+      const note = () => PENTA[Math.floor(Math.random() * PENTA.length)];
+      switch (s.sound ?? "lofi") {
+        case "musicbox": // no drums, high twinkly notes
+          if (step % 8 === 0) chord.forEach((n) => this.pad(hz(s.root - 12 + n), t, eighth * 8, "sine", 0.02));
+          if (Math.random() < 0.75) this.pluck(hz(s.root + 12 + note()), t, "sine", 0.06, 0.9);
+          break;
+        case "chip": // square-wave arpeggios and a punchy beat
+          this.pluck(hz(s.root + 12 + chord[step % 4]), t, "square", 0.025, 0.12);
+          if (step % 8 === 0) this.pluck(hz(s.root - 12 + chord[0]), t, "square", 0.03, eighth * 7);
+          if (step % 4 === 0) this.kick(t);
+          if (step % 8 === 4) this.snare(t);
+          if (step % 2 === 1) this.hat(t);
+          break;
+        case "piano": // chord stabs, wandering melody, soft brushes
+          if (step % 4 === 0) chord.forEach((n) => this.pluck(hz(s.root + n), t, "triangle", 0.05, 1.4));
+          if (Math.random() < 0.4) this.pluck(hz(s.root + 12 + note()), t, "triangle", 0.07, 1);
+          if (step % 2 === 1) this.hat(t);
+          break;
+        case "space": // long floating pads and rare echoing notes
+          if (step % 16 === 0) chord.forEach((n) => this.pad(hz(s.root + n), t, eighth * 16, "sine", 0.05));
+          if (Math.random() < 0.12) this.pluck(hz(s.root + 24 + note()), t, "sine", 0.04, 2.5);
+          break;
+        default:
+          if (step % 8 === 0) chord.forEach((n) => this.pad(hz(s.root + n), t, eighth * 8));
+          if (step % 8 === 0 || step % 8 === 5) this.kick(t);
+          if (step % 8 === 4) this.snare(t);
+          if (step % 2 === 1) this.hat(t);
+          if (Math.random() < 0.3) this.pluck(hz(s.root + 12 + note()), t);
+      }
       if (s.scene === "fire" && Math.random() < 0.5) this.pop(t + Math.random() * eighth, 0.25);
       if (s.scene === "night" && step % 4 === 2 && Math.random() < 0.6) this.cricket(t);
       if (Math.random() < 0.12) this.pop(t + Math.random() * eighth, 0.06); // vinyl dust
@@ -193,23 +250,23 @@ class RadioEngine {
     return g;
   }
 
-  pad(f: number, t: number, dur: number) {
+  pad(f: number, t: number, dur: number, type: OscillatorType = "triangle", peak = 0.045) {
     const o = this.ctx.createOscillator();
-    o.type = "triangle";
+    o.type = type;
     o.frequency.value = f;
     o.detune.value = (Math.random() - 0.5) * 14; // tape wobble
-    o.connect(this.env(t, 0.4, 0.045, dur));
+    o.connect(this.env(t, Math.min(0.4, dur / 3), peak, dur));
     o.start(t);
     o.stop(t + dur + 0.1);
   }
 
-  pluck(f: number, t: number) {
+  pluck(f: number, t: number, type: OscillatorType = "sine", peak = 0.07, dur = 0.6) {
     const o = this.ctx.createOscillator();
-    o.type = "sine";
+    o.type = type;
     o.frequency.value = f;
-    o.connect(this.env(t, 0.01, 0.07, 0.6));
+    o.connect(this.env(t, 0.01, peak, dur));
     o.start(t);
-    o.stop(t + 0.7);
+    o.stop(t + dur + 0.1);
   }
 
   kick(t: number) {
@@ -266,8 +323,10 @@ function scramble(text: string, strength: number, seed: number) {
 export default function LofiRadioTuner({
   defaultFrequency = 97.7,
   stations = DEFAULT_STATIONS,
+  hiddenStations = DEFAULT_HIDDEN_STATIONS,
   defaultVolume = 0.6,
   onTune,
+  onFind,
   className = "",
 }: LofiRadioTunerProps) {
   const [freq, setFreqState] = useState(round1(clamp(defaultFrequency, MIN, MAX)));
@@ -279,8 +338,15 @@ export default function LofiRadioTuner({
   const lastAngle = useRef(0);
   const lastTuned = useRef<RadioStation | null | undefined>(undefined);
 
-  const sorted = useMemo(() => [...stations].sort((a, b) => a.freq - b.freq), [stations]);
-  const { nearest, strength } = tuneTo(freq, sorted);
+  const [found, setFound] = useState<number[]>([]);
+  const [party, setParty] = useState(false);
+  const all = useMemo(
+    () => [...stations, ...hiddenStations.map((h) => ({ ...h, hidden: true }))].sort((a, b) => a.freq - b.freq),
+    [stations, hiddenStations],
+  );
+  const sorted = useMemo(() => all.filter((s) => !s.hidden || found.includes(s.freq)), [all, found]);
+  const totalHidden = hiddenStations.length;
+  const { nearest, strength, bleed } = tuneTo(freq, all);
   const locked = strength > 0.6 ? nearest : null;
   const color = nearest?.color ?? "#ffd27a";
 
@@ -294,10 +360,30 @@ export default function LofiRadioTuner({
     }
   }, [locked, freq, onTune]);
 
+  // Count hidden stations the first time each one locks in, and celebrate when all are found.
+  useEffect(() => {
+    if (!power || !locked?.hidden || found.includes(locked.freq)) return;
+    // Only counts once you stay on it for a moment, not when the needle just sweeps past.
+    const st = locked;
+    const t = setTimeout(() => {
+      const next = [...found, st.freq];
+      setFound(next);
+      onFind?.(st, next.length, totalHidden);
+      if (next.length === totalHidden) setParty(true);
+    }, 700);
+    return () => clearTimeout(t);
+  }, [power, locked, found, totalHidden, onFind]);
+
+  useEffect(() => {
+    if (!party) return;
+    const t = setTimeout(() => setParty(false), 3200);
+    return () => clearTimeout(t);
+  }, [party]);
+
   // Keep the sound in step with the dial.
   useEffect(() => {
-    engine.current?.set(power ? volume * 0.8 : 0, strength, strength > 0.05 ? nearest : null);
-  }, [power, volume, strength, nearest]);
+    engine.current?.set(power ? volume * 0.8 : 0, strength, bleed, strength > 0.05 || bleed > 0.01 ? nearest : null);
+  }, [power, volume, strength, bleed, nearest]);
 
   useEffect(() => () => engine.current?.close(), []);
 
@@ -391,7 +477,20 @@ export default function LofiRadioTuner({
           {scene === "waves" && <><i className="wave" /><i className="wave w2" /><i className="gull" /></>}
           {scene === "fire" && Array.from({ length: 7 }, (_, i) => <i key={i} className="flame" style={{ left: `${36 + i * 4.5}%`, animationDelay: `${i * 0.13}s`, height: `${40 + ((i * 17) % 30)}%` }} />)}
           {scene === "fire" && <i className="logs" />}
+          {scene === "notes" && Array.from({ length: 9 }, (_, i) => <i key={i} className="note" style={{ left: `${8 + i * 10.5}%`, animationDelay: `${(i * 0.37) % 2.4}s` }}>{i % 2 ? "♪" : "♫"}</i>)}
+          {scene === "pixels" && <><i className="ground" /><i className="hero" /><i className="coin" /><i className="coin c2" /><i className="block" /></>}
+          {scene === "keys" && <><i className="spot" /><i className="piano" /></>}
+          {scene === "space" && <>{Array.from({ length: 22 }, (_, i) => <i key={i} className="star" style={{ left: `${(i * 29) % 100}%`, top: `${(i * 37) % 95}%`, animationDelay: `${(i * 0.23) % 2}s` }} />)}<i className="planet" /></>}
         </div>
+
+        {party && (
+          <div className="lrt-confetti" aria-hidden>
+            {Array.from({ length: 36 }, (_, i) => (
+              <i key={i} style={{ left: `${(i * 53) % 100}%`, background: ["#ff9ec0", "#7cf27c", "#f0c987", "#8fb8ff", "#ffd27a"][i % 5], animationDelay: `${(i % 9) * 0.08}s` }} />
+            ))}
+            <b>All {totalHidden} hidden stations found! ★</b>
+          </div>
+        )}
 
         {/* Dial */}
         <div className="lrt-dial" onClick={(e) => {
@@ -404,9 +503,16 @@ export default function LofiRadioTuner({
                 {i % 4 === 0 && <b>{MIN + i}</b>}
               </span>
             ))}
-            {sorted.map((s) => (
-              <span key={s.freq} className="mark" title={s.name} style={{ left: `${((s.freq - MIN) / (MAX - MIN)) * 100}%`, background: s.color }} />
-            ))}
+            {all.map((s) => {
+              const left = `${((s.freq - MIN) / (MAX - MIN)) * 100}%`;
+              if (!s.hidden) return <span key={s.freq} className="mark" title={s.name} style={{ left, background: s.color }} />;
+              const got = found.includes(s.freq);
+              return (
+                <span key={s.freq} className={`hmark ${got ? "got" : ""}`} title={got ? s.name : "Hidden station"} style={{ left, color: got ? s.color : undefined }}>
+                  {got ? "★" : "?"}
+                </span>
+              );
+            })}
             <span className="needle" style={{ left: `${pct}%` }} />
           </div>
         </div>
@@ -417,7 +523,22 @@ export default function LofiRadioTuner({
             <div className="lrt-display" aria-live="polite">
               <span className="freq">{freq.toFixed(1)}<small>FM</small></span>
               <span className="name">{power ? (strength > 0.05 && nearest ? scramble(nearest.name, strength, seed) : "~ static ~") : "power off"}</span>
-              <span className="vibe">{power && locked ? locked.vibe : power ? "keep turning the knob…" : "press the power button"}</span>
+              <span className="vibe">
+                {!power
+                  ? "press the power button"
+                  : locked?.hidden
+                    ? `★ ${locked.vibe}`
+                    : locked
+                      ? locked.vibe
+                      : bleed > 0.02 && nearest
+                        ? `faint: ${nearest.hidden && !found.includes(nearest.freq) ? "something hidden…" : nearest.name}`
+                        : "keep turning the knob…"}
+              </span>
+              {totalHidden > 0 && (
+                <span className={`found ${found.length === totalHidden ? "all" : ""}`} aria-label={`${found.length} of ${totalHidden} hidden stations found`}>
+                  ★ {found.length}/{totalHidden}
+                </span>
+              )}
               <span className="bars" aria-label={`Signal ${bars} of 5`}>
                 {[1, 2, 3, 4, 5].map((n) => <i key={n} className={n <= bars && power ? "on" : ""} style={{ height: 4 + n * 3 }} />)}
               </span>
@@ -498,6 +619,32 @@ const CSS = `
 .flame{bottom:14px;width:16px;border-radius:50% 50% 30% 30%/70% 70% 30% 30%;background:linear-gradient(#ffe27a,#ff7a3a 60%,#d0361e);transform-origin:bottom;animation:lrt-flick .5s ease-in-out infinite alternate;filter:blur(.4px)}
 @keyframes lrt-flick{to{transform:scaleY(.75) scaleX(1.1) skewX(4deg)}}
 .logs{left:34%;bottom:6px;width:32%;height:12px;border-radius:6px;background:#5a3420}
+.sc-notes{background:linear-gradient(#ffd6e6,#ffeef5)}
+.note{bottom:-20px;font-size:20px;color:#d94f86;animation:lrt-float 2.4s ease-in infinite}
+@keyframes lrt-float{to{transform:translateY(-110px) rotate(20deg);opacity:0}}
+.sc-pixels{background:#140c2e;image-rendering:pixelated}
+.ground{left:0;right:0;bottom:0;height:14px;background:repeating-linear-gradient(90deg,#3b8f3b 0 10px,#2d6e2d 10px 20px);animation:lrt-scroll 1s steps(5) infinite}
+@keyframes lrt-scroll{to{background-position:-20px 0}}
+.hero{left:22%;bottom:14px;width:16px;height:20px;background:#ff5a5a;box-shadow:inset 0 6px 0 #ffd27a;animation:lrt-jump 1s steps(4) infinite}
+@keyframes lrt-jump{50%{transform:translateY(-26px)}}
+.coin{left:60%;top:24%;width:10px;height:14px;background:#ffd27a;border-radius:3px;animation:lrt-coin 1.2s steps(4) infinite}
+.coin.c2{left:75%;top:40%;animation-delay:-.6s}
+@keyframes lrt-coin{50%{transform:scaleX(.2)}}
+.block{left:45%;top:18%;width:18px;height:18px;background:#c9762b;box-shadow:inset 0 0 0 3px #7a4526}
+.sc-keys{background:radial-gradient(ellipse at 50% 0,#4a3520,#120c08 75%)}
+.spot{left:30%;top:0;width:40%;height:100%;background:linear-gradient(#fff3c455,transparent);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%)}
+.piano{left:8%;right:8%;bottom:0;height:30px;background:repeating-linear-gradient(90deg,#fffaf0 0 13px,#2a1a10 13px 14px);border-top:4px solid #2a1a10}
+.piano:after{content:"";position:absolute;inset:0 0 45% 0;background:repeating-linear-gradient(90deg,transparent 0 9px,#1a1008 9px 17px,transparent 17px 28px)}
+.sc-space{background:radial-gradient(circle at 30% 30%,#1c2350,#05060f 70%)}
+.planet{right:16%;top:22%;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c9d8ff,#5a6fd0);box-shadow:0 0 18px #8fb8ff88;animation:lrt-pulse 4s ease-in-out infinite}
+.planet:after{content:"";position:absolute;left:-12px;top:13px;width:58px;height:8px;border:2px solid #c9d8ffaa;border-radius:50%;transform:rotate(-15deg)}
+.hmark{position:absolute;bottom:-3px;transform:translateX(-50%);font-size:12px;font-weight:700;color:#7a4526aa;line-height:1}
+.hmark.got{font-size:13px;text-shadow:0 0 6px currentColor,0 0 1px #2a1a10}
+.lrt-confetti{position:absolute;inset:0;z-index:20;pointer-events:none;overflow:hidden;border-radius:22px}
+.lrt-confetti i{position:absolute;top:-10px;width:8px;height:12px;border-radius:2px;animation:lrt-fall 2.6s ease-in forwards}
+@keyframes lrt-fall{to{transform:translateY(520px) rotate(540deg)}}
+.lrt-confetti b{position:absolute;left:50%;top:38%;transform:translateX(-50%);white-space:nowrap;background:#1b1426;color:#ffd27a;border:3px solid #ffd27a;border-radius:10px;padding:8px 14px;font-size:14px;animation:lrt-pop .4s ease-out}
+@keyframes lrt-pop{from{transform:translateX(-50%) scale(.5);opacity:0}}
 .lrt-dial{position:relative;margin-top:12px;padding:10px 14px 8px;background:linear-gradient(#fbf0d6,var(--cream));border:4px solid var(--wood2);border-radius:12px;cursor:pointer;box-shadow:inset 0 0 calc(var(--s)*24px) color-mix(in srgb,var(--c) 70%,transparent)}
 .lrt-track{position:relative;height:42px}
 .tick{position:absolute;top:0;width:2px;height:10px;background:#7a4526aa;transform:translateX(-1px)}
@@ -513,6 +660,8 @@ const CSS = `
 .lrt-display small{font-size:10px;margin-left:3px}
 .lrt-display .name{font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lrt-display .vibe{font-size:11px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.found{position:absolute;right:10px;top:8px;font-size:11px;color:#ffd27a99}
+.found.all{color:#ffd27a;text-shadow:0 0 8px #ffd27a}
 .bars{position:absolute;right:10px;bottom:12px;display:flex;align-items:flex-end;gap:3px}
 .bars i{width:5px;background:#ffffff22;border-radius:1px}
 .bars i.on{background:var(--c)}
