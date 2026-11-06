@@ -268,25 +268,60 @@ export function stepTime(genre: Genre, step: number) {
   return step * d + (step % 2 ? genre.swing * d : 0);
 }
 
-/** Cleans a recording: trims silence, fades the ends and makes it loud enough. */
+/**
+ * Cleans a recording: finds the real sound by its loudness envelope (so a mic "pop" or hiss
+ * doesn't fool it), trims the silence around it, turns down background hiss, and makes it loud enough.
+ */
 export function cleanRecording(raw: Float32Array, rate: number): Float32Array<ArrayBuffer> | null {
-  let peak = 0;
-  for (let i = 0; i < raw.length; i++) peak = Math.max(peak, Math.abs(raw[i]));
-  if (peak < 0.003) return null;
-  const th = Math.max(0.002, peak * 0.08);
-  let a = 0;
-  while (a < raw.length && Math.abs(raw[a]) < th) a++;
-  let b = raw.length - 1;
-  while (b > a && Math.abs(raw[b]) < th) b--;
-  a = Math.max(0, a - Math.floor(rate * 0.006));
-  b = Math.min(raw.length, b + Math.floor(rate * 0.08));
-  b = Math.min(b, a + Math.floor(rate * 1.6));
+  const win = Math.max(1, Math.floor(rate * 0.01)); // 10 ms windows
+  const n = Math.floor(raw.length / win);
+  if (n < 5) return null;
+  const env = new Float32Array(n);
+  for (let w = 0; w < n; w++) {
+    let e = 0;
+    for (let i = w * win; i < (w + 1) * win; i++) e += raw[i] * raw[i];
+    env[w] = Math.sqrt(e / win);
+  }
+  const skip = Math.min(n - 1, 4); // ignore the first 40 ms, where mic clicks live
+  const sorted = Array.from(env.subarray(skip)).sort((x, y) => x - y);
+  const floor = sorted[Math.floor(sorted.length * 0.2)] || 0;
+  const loud = sorted[sorted.length - 1];
+  if (loud < 0.003 || loud < floor * 2.5) return null;
+  const startTh = Math.max(floor * 3, loud * 0.12);
+  const endTh = Math.max(floor * 2, loud * 0.05);
+  let s = skip;
+  while (s < n && env[s] < startTh) s++;
+  let e = n - 1;
+  while (e > s && env[e] < endTh) e--;
+  let a = Math.max(0, s * win - Math.floor(rate * 0.025));
+  let b = Math.min(raw.length, (e + 1) * win + Math.floor(rate * 0.15));
+  b = Math.min(b, a + Math.floor(rate * 2.5));
+  if (b - a < rate * 0.03) return null;
+
+  // Gentle noise gate from the envelope, interpolated per sample.
+  const gateAt = (w: number) => {
+    const v = env[Math.min(n - 1, Math.max(0, w))];
+    return Math.min(1, Math.max(0.12, (v - floor * 1.3) / (floor * 2 + 1e-6)));
+  };
   const out = new Float32Array(b - a);
-  const g = 0.9 / peak;
-  const fin = Math.floor(rate * 0.003);
-  const fout = Math.min(out.length >> 1, Math.floor(rate * 0.04));
   for (let i = 0; i < out.length; i++) {
-    let v = raw[a + i] * g;
+    const pos = (a + i) / win - 0.5;
+    const w0 = Math.floor(pos);
+    const f = pos - w0;
+    out[i] = raw[a + i] * (gateAt(w0) * (1 - f) + gateAt(w0 + 1) * f);
+  }
+
+  // Normalise to a robust peak (ignores a few stray spikes), with a soft limiter on top.
+  const abs: number[] = [];
+  for (let i = 0; i < out.length; i += 4) abs.push(Math.abs(out[i]));
+  abs.sort((x, y) => x - y);
+  const peak = Math.max(abs[Math.floor(abs.length * 0.999)] || 0, 1e-4);
+  const g = Math.min(0.85 / peak, 60);
+  const fin = Math.floor(rate * 0.005);
+  const fout = Math.min(out.length >> 1, Math.floor(rate * 0.05));
+  for (let i = 0; i < out.length; i++) {
+    let v = out[i] * g;
+    if (Math.abs(v) > 0.8) v = Math.sign(v) * (0.8 + 0.2 * Math.tanh((Math.abs(v) - 0.8) / 0.2));
     if (i < fin) v *= i / fin;
     if (i > out.length - fout) v *= (out.length - i) / fout;
     out[i] = v;
