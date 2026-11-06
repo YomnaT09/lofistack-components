@@ -590,8 +590,8 @@ const CSS = `
 .rbb-gen-wrap,.rbb-play-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:14px}
 .rbb .rbb-gen{width:100%;border:0;background:linear-gradient(90deg,#ffb86b,#ff6b8a);color:#2a1c3d;font-weight:800;font-size:19px;padding:15px;border-radius:16px;box-shadow:0 0 28px #ff6b8a55}
 .rbb .rbb-gen:hover:not(:disabled){background:linear-gradient(90deg,#ffc584,#ff8199)}
-.rbb-genres{display:flex;background:#2d2242;border:1px solid #4a3a66;border-radius:10px;padding:2px}
-.rbb .rbb-genres button{border:0;background:transparent;padding:5px 11px;border-radius:8px}
+.rbb-genres{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;width:100%;max-width:360px;background:#2d2242;border:1px solid #4a3a66;border-radius:12px;padding:3px}
+.rbb .rbb-genres button{border:0;background:transparent;padding:7px 4px;border-radius:9px;white-space:nowrap}
 .rbb .rbb-genres button.on{background:#b79bff;color:#1b1328;font-weight:700}
 .rbb-steps{display:flex;gap:4px}
 .rbb-steps i{width:12px;height:12px;border-radius:3px;background:#3a2c52}
