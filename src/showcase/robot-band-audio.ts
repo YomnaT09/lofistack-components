@@ -140,9 +140,9 @@ const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
 /** How each robot plays its sound, so even a table tap fits the job. */
 const ROLE_FX: Record<RoleId, { rate: number; type: BiquadFilterType; freq: number; dur: number; gain: number }> = {
-  boom: { rate: 0.55, type: "lowpass", freq: 520, dur: 0.42, gain: 1.6 },
+  boom: { rate: 0.7, type: "lowpass", freq: 1100, dur: 0.42, gain: 1.4 },
   snap: { rate: 1, type: "highpass", freq: 260, dur: 0.3, gain: 0.85 },
-  tick: { rate: 1.8, type: "highpass", freq: 3800, dur: 0.07, gain: 0.5 },
+  tick: { rate: 1.5, type: "highpass", freq: 2200, dur: 0.11, gain: 0.55 },
   bass: { rate: 1, type: "lowpass", freq: 750, dur: 0, gain: 1.1 },
   melo: { rate: 1, type: "lowpass", freq: 5200, dur: 0, gain: 0.65 },
 };
@@ -404,4 +404,30 @@ export async function renderWav(song: Song, sounds: Partial<Record<RoleId, Learn
     }
   }
   return new Blob([view.buffer], { type: "audio/wav" });
+}
+
+/** How bright (noisy) a sound is: zero crossings per second. */
+function brightness(s: LearnedSound) {
+  let z = 0;
+  for (let i = 1; i < s.data.length; i++) if ((s.data[i - 1] < 0) !== (s.data[i] < 0)) z++;
+  return z / (s.data.length / s.rate);
+}
+
+/**
+ * Gives each of the recorded clips a job. Sounds with a clear pitch (a voice, a hum, a glass)
+ * become the melody and the bass; of the rest, the darkest is the kick, the brightest the hi-hat.
+ * Returns the clip index for each role.
+ */
+export function assignRoles(clips: LearnedSound[]): Record<RoleId, number> {
+  const idx = clips.map((_, i) => i);
+  const tonal = [...idx].sort((a, b) => {
+    const pa = clips[a].pitch ? 1 : 0, pb = clips[b].pitch ? 1 : 0;
+    if (pa !== pb) return pb - pa;
+    return clips[b].data.length / clips[b].rate - clips[a].data.length / clips[a].rate;
+  });
+  const [t1, t2] = tonal;
+  const hi = (clips[t1].pitch ?? 0) >= (clips[t2].pitch ?? 0) ? t1 : t2;
+  const lo = hi === t1 ? t2 : t1;
+  const rest = idx.filter((i) => i !== t1 && i !== t2).sort((a, b) => brightness(clips[a]) - brightness(clips[b]));
+  return { melo: hi, bass: lo, boom: rest[0], snap: rest[1], tick: rest[2] };
 }
