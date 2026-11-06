@@ -80,6 +80,7 @@ export default function RobotBand({
   const [level, setLevel] = useState(0);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lastSlot, setLastSlot] = useState<number | null>(null);
 
   const filled = clips.filter(Boolean).length;
   const nextSlot = clips.findIndex((c) => !c);
@@ -99,7 +100,6 @@ export default function RobotBand({
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const uiTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const robotEls = useRef<Partial<Record<RoleId, HTMLDivElement | null>>>({});
-  const stopRec = useRef<(() => void) | null>(null);
 
   const audio = useCallback(() => {
     if (!ctxRef.current) {
@@ -161,75 +161,141 @@ export default function RobotBand({
   useEffect(() => { onPlayChange?.(playing); }, [playing, onPlayChange]);
   useEffect(() => () => {
     stop();
-    stopRec.current?.();
+    take.current?.finish();
     void ctxRef.current?.close();
   }, [stop]);
 
+  // The microphone stays open between takes, so there is no click and no lost start on each recording.
+  const mic = useRef<{ stream: MediaStream; analyser: AnalyserNode | null; src: MediaStreamAudioSourceNode | null } | null>(null);
+  const take = useRef<{ slot: number; go: boolean; started: number; heard: boolean; lastLoud: number; finish: () => void } | null>(null);
+  const history = useRef<number[]>([]);
+  const canvas = useRef<HTMLCanvasElement | null>(null);
+  const raf = useRef(0);
+  const floorRef = useRef(0.01);
+  const [micOn, setMicOn] = useState(false);
+  const [go, setGo] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+
+  const closeMic = useCallback(() => {
+    cancelAnimationFrame(raf.current);
+    const m = mic.current;
+    mic.current = null;
+    m?.src?.disconnect();
+    m?.stream.getTracks().forEach((t) => t.stop());
+    history.current = [];
+    setMicOn(false);
+    setLevel(0);
+  }, []);
+
+  // Live loop: level meter, scrolling wave, and auto-stop when you go quiet.
+  const loop = useCallback(() => {
+    const m = mic.current;
+    if (!m) return;
+    let rms = 0;
+    if (m.analyser) {
+      const buf = new Float32Array(m.analyser.fftSize);
+      m.analyser.getFloatTimeDomainData(buf);
+      let pk = 0;
+      for (let i = 0; i < buf.length; i++) { rms += buf[i] * buf[i]; pk = Math.max(pk, Math.abs(buf[i])); }
+      rms = Math.sqrt(rms / buf.length);
+      history.current.push(pk);
+      if (history.current.length > 160) history.current.shift();
+    }
+    setLevel(Math.min(1, rms * 10));
+    const t = take.current;
+    if (t && t.go) {
+      const el = (performance.now() - t.started) / 1000;
+      setElapsed(el);
+      const loudTh = Math.max(0.02, floorRef.current * 3);
+      if (rms > loudTh) { t.heard = true; t.lastLoud = el; }
+      if (m.analyser && t.heard && el > 0.4 && el - t.lastLoud > 0.7) t.finish();
+      if (el > maxSeconds) t.finish();
+    } else if (!t) {
+      // Learn how loud the room is while nobody is recording.
+      floorRef.current = floorRef.current * 0.97 + Math.min(rms, 0.05) * 0.03;
+    }
+    // Draw the scrolling wave.
+    const c = canvas.current;
+    const g = c?.getContext("2d");
+    if (c && g) {
+      const w = c.width, h = c.height, hs = history.current;
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = t?.go ? "#ff6b8a" : "#7fd6c2";
+      const bw = w / 160;
+      for (let i = 0; i < hs.length; i++) {
+        const v = Math.max(1.5, Math.min(1, hs[i] * 1.6) * h * 0.46);
+        g.fillRect(w - (hs.length - i) * bw, h / 2 - v, Math.max(1, bw - 1), v * 2);
+      }
+    }
+    raf.current = requestAnimationFrame(loop);
+  }, [maxSeconds]);
+
+  const openMic = async () => {
+    if (mic.current) return mic.current;
+    const { ctx } = audio();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+    let analyser: AnalyserNode | null = null;
+    let src: MediaStreamAudioSourceNode | null = null;
+    try {
+      src = ctx.createMediaStreamSource(stream);
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      src.connect(analyser);
+    } catch { analyser = null; } // the meter is a bonus: recording works without it
+    mic.current = { stream, analyser, src };
+    setMicOn(true);
+    raf.current = requestAnimationFrame(loop);
+    return mic.current;
+  };
+
+  useEffect(() => () => closeMic(), [closeMic]);
+
   /** Records one clip into a slot. Stops by itself when you go quiet. */
   const record = async (slot: number) => {
-    if (recSlot !== null) { stopRec.current?.(); return; }
+    if (take.current) { if (take.current.go) take.current.finish(); return; }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setStatus("This browser can't record here. Try Use demo sounds.");
       return;
     }
     const { ctx } = audio();
     if (playing) stop();
-    let stream: MediaStream;
+    let m;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+      m = await openMic();
     } catch {
       setStatus("Microphone blocked. Allow it in the address bar, or press Use demo sounds.");
       return;
     }
-    setRecSlot(slot);
-    setStatus(`Recording sound ${slot + 1}… make any sound, then go quiet (or press Stop).`);
-
-    const rec = new MediaRecorder(stream);
+    const rec = new MediaRecorder(m.stream);
     const parts: Blob[] = [];
     rec.ondataavailable = (e) => { if (e.data.size) parts.push(e.data); };
-
-    // The analyser only drives the level ring and the auto-stop. If it fails, recording still works.
-    let analyser: AnalyserNode | null = null;
-    let src: MediaStreamAudioSourceNode | null = null;
-    try {
-      src = ctx.createMediaStreamSource(stream);
-      analyser = ctx.createAnalyser();
-      analyser.fftSize = 2048;
-      src.connect(analyser);
-    } catch { analyser = null; }
-
-    const started = performance.now();
-    let heard = false;
-    let lastLoud = 0;
     let done = false;
-    const buf = new Float32Array(2048);
-    const finish = () => {
-      if (done) return;
-      done = true;
-      clearInterval(meter);
-      stopRec.current = null;
-      if (rec.state !== "inactive") rec.stop();
-      else void process();
+    const t = {
+      slot, go: false, started: 0, heard: false, lastLoud: 0,
+      finish: () => {
+        if (done) return;
+        done = true;
+        if (rec.state !== "inactive") rec.stop();
+      },
     };
-    const meter = setInterval(() => {
-      const elapsed = (performance.now() - started) / 1000;
-      if (analyser) {
-        analyser.getFloatTimeDomainData(buf);
-        let rms = 0;
-        for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
-        rms = Math.sqrt(rms / buf.length);
-        setLevel(Math.min(1, rms * 8));
-        if (rms > 0.015) { heard = true; lastLoud = elapsed; }
-        if (heard && elapsed > 0.5 && elapsed - lastLoud > 0.6) finish();
-      }
-      if (elapsed > maxSeconds) finish();
-    }, 50);
-
-    const process = async () => {
-      src?.disconnect();
-      stream.getTracks().forEach((t) => t.stop());
+    take.current = t;
+    setRecSlot(slot);
+    setGo(false);
+    setElapsed(0);
+    setStatus("Get ready…");
+    rec.onstart = () => {
+      // Only say GO once the recorder is really listening, so the start of your sound is never lost.
+      t.go = true;
+      t.started = performance.now();
+      setGo(true);
+      setStatus(`Recording sound ${slot + 1}. Make your sound, then go quiet.`);
+    };
+    rec.onstop = async () => {
+      take.current = null;
       setRecSlot(null);
-      setLevel(0);
+      setGo(false);
       try {
         const blob = new Blob(parts, { type: rec.mimeType || parts[0]?.type });
         const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
@@ -239,25 +305,23 @@ export default function RobotBand({
           for (let i = 0; i < d.length; i++) raw[i] += d[i] / decoded.numberOfChannels;
         }
         const clean = cleanRecording(raw, decoded.sampleRate);
-        if (!clean) { setStatus(`Didn't hear anything for sound ${slot + 1}. Get closer to the mic and try again.`); return; }
+        if (!clean) { setStatus(`Didn't catch a sound for ${slot + 1}. Get a bit closer or louder and press REC again.`); return; }
         const pitch = detectPitch(clean, decoded.sampleRate);
         const clip: LearnedSound = { data: clean, rate: decoded.sampleRate, pitch, label: `sound ${slot + 1}` };
         setClips((cs) => cs.map((c, i) => (i === slot ? clip : c)));
         setRoles(null); // a new sound means a new tune
         onRecord?.(slot, clean.length / decoded.sampleRate, pitch);
-        setStatus(`Got sound ${slot + 1}!`);
+        playClip(clip);
+        setLastSlot(slot);
+        setStatus(`Got sound ${slot + 1}! 🔊 Playing it back. Not happy? Press ↺ to redo it.`);
       } catch {
         setStatus("Couldn't read that recording. Try again, or try another browser.");
       }
     };
-    rec.onstop = () => { void process(); };
-    stopRec.current = finish;
-    rec.start(100);
+    rec.start();
   };
 
-  const hear = (slot: number) => {
-    const c = clips[slot];
-    if (!c) return;
+  const playClip = (c: LearnedSound) => {
     const { ctx } = audio();
     const s = ctx.createBufferSource();
     const b = ctx.createBuffer(1, c.data.length, c.rate);
@@ -267,9 +331,15 @@ export default function RobotBand({
     s.start();
   };
 
+  const hear = (slot: number) => {
+    const c = clips[slot];
+    if (c) playClip(c);
+  };
+
   const generate = () => {
     const all = clips.filter((c): c is LearnedSound => !!c);
     if (all.length < SLOTS) return;
+    closeMic();
     const r = assignRoles(all);
     const nextSeed = seed + 1;
     setRoles(r);
@@ -286,6 +356,7 @@ export default function RobotBand({
     stop();
     setRoles(null);
     setClips(Array(SLOTS).fill(null));
+    setLastSlot(null);
     setStatus("");
   };
 
@@ -365,19 +436,31 @@ export default function RobotBand({
 
       {phase !== "play" && (
         <>
-          {phase === "record" && bigSlot !== null && (
+          {(phase === "record" || recording) && bigSlot !== null && (
             <div className="rbb-big">
+              <div className={`rbb-mic ${micOn ? "on" : ""} ${level > 0.08 ? "hear" : ""}`}>
+                🎙 {micOn ? (level > 0.08 ? "mic on · hearing you" : "mic on") : "mic off · press REC to start"}
+              </div>
+              {recording && go && <div className="rbb-go">● GO!</div>}
               <button
                 type="button"
-                className={`rbb-rec ${recording ? "on" : ""}`}
+                className={`rbb-rec ${recording ? "on" : ""} ${recording && !go ? "wait" : ""}`}
                 style={{ ["--lv" as string]: String(level) }}
                 onClick={() => record(bigSlot)}
                 aria-label={recording ? "Stop recording" : `Record sound ${bigSlot + 1} of 5`}
               >
-                {recording ? "■ STOP" : "● REC"}
+                {recording ? (go ? "■ STOP" : "…") : "● REC"}
               </button>
               <div className="rbb-q">Sound {bigSlot + 1} of 5</div>
-              <div className="rbb-hint">{recording ? "listening… go quiet to finish" : "Make any sound: clap, voice, table tap, a cup…"}</div>
+              <div className="rbb-hint">
+                {recording ? (go ? "make your sound now… go quiet to finish" : "get ready…") : lastSlot !== null && clips[lastSlot] ? `Sound ${lastSlot + 1} saved. Press REC for the next one.` : "Make any sound: clap, voice, table tap, a cup…"}
+              </div>
+              {micOn && (
+                <div className={`rbb-strip ${recording && go ? "live" : ""}`}>
+                  <canvas ref={canvas} width={480} height={64} aria-hidden />
+                  {recording && go && <span className="tm">{elapsed.toFixed(1)}s</span>}
+                </div>
+              )}
               <div className="rbb-dots" aria-hidden>
                 {clips.map((c, i) => <i key={i} className={c ? "f" : i === bigSlot ? "n" : ""} style={c ? { background: COLORS[i] } : undefined} />)}
               </div>
@@ -399,7 +482,7 @@ export default function RobotBand({
             ))}
           </div>
 
-          {phase === "ready" && (
+          {phase === "ready" && !recording && (
             <div className="rbb-gen-wrap">
               {genres}
               <button type="button" className="rbb-gen" onClick={generate}>✨ Generate tune</button>
@@ -479,7 +562,17 @@ const CSS = `
 .rbb-big{display:flex;flex-direction:column;align-items:center;margin:8px 0 14px}
 .rbb .rbb-rec{width:116px;height:116px;border-radius:50%;background:#ff4d5e;border:0;font-weight:800;font-size:18px;color:#fff;box-shadow:0 0 0 10px #ff4d5e33,0 0 34px #ff4d5e99}
 .rbb .rbb-rec:hover:not(:disabled){background:#ff6370}
-.rbb .rbb-rec.on{background:#c9303f;box-shadow:0 0 0 calc(8px + var(--lv) * 22px) #ff4d5e44,0 0 40px #ff4d5e}
+.rbb .rbb-rec.on{width:96px;height:96px;font-size:15px;white-space:nowrap;background:#c9303f;box-shadow:0 0 0 calc(8px + var(--lv) * 22px) #ff4d5e44,0 0 40px #ff4d5e}
+.rbb-mic{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid #4a3a66;color:var(--mute);margin-bottom:14px;transition:all .15s}
+.rbb-mic.on{border-color:#7fd6c277;color:#7fd6c2;background:#7fd6c215}
+.rbb-mic.hear{box-shadow:0 0 12px #7fd6c255}
+.rbb-go{font-size:28px;font-weight:900;color:#ff4d5e;letter-spacing:2px;margin-bottom:10px;animation:rbb-pulse .8s ease-in-out infinite}
+.rbb .rbb-rec.wait{background:#7a3a48;box-shadow:none}
+.rbb-strip{position:relative;width:100%;height:64px;margin-top:14px;background:#120c1a;border:1px solid #4a3a66;border-radius:12px;overflow:hidden}
+.rbb-strip.live{border-color:#ff4d5e88}
+.rbb-strip canvas{width:100%;height:100%;display:block}
+.rbb-strip .tm{position:absolute;right:8px;top:5px;font-size:11px;color:#ff8a95}
+@keyframes rbb-pulse{50%{opacity:.55}}
 .rbb-q{font-size:20px;font-weight:800;margin-top:16px}
 .rbb-hint{font-size:12px;color:var(--mute);margin-top:4px;text-align:center}
 .rbb-dots{display:flex;gap:8px;margin-top:10px}
@@ -517,5 +610,5 @@ const CSS = `
 @keyframes rbb-bop{0%{transform:translateY(0)}40%{transform:translateY(-7px) scale(1.04,.96)}100%{transform:translateY(0)}}
 @keyframes rbb-zz{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
 @media (max-width:480px){.rbb{padding:14px;border-radius:18px}.rbb-bot .head{width:42px}.rbb-bot .body{width:36px}}
-@media (prefers-reduced-motion:reduce){.rbb-bot.hit,.rbb-bot .zz{animation:none}}
+@media (prefers-reduced-motion:reduce){.rbb-bot.hit,.rbb-bot .zz,.rbb-go{animation:none}}
 `;
