@@ -2,7 +2,7 @@
 // Everything runs in the browser with the Web Audio API: no audio files, no server.
 
 export type RoleId = "boom" | "snap" | "tick" | "bass" | "melo";
-export type GenreId = "lofi" | "chip" | "bossa";
+export type GenreId = "lofi" | "chip" | "bossa" | "boombap" | "house" | "trap" | "reggaeton" | "funk" | "dreamy";
 
 /** One sound a robot has learned. data is mono PCM at `rate` Hz. */
 export interface LearnedSound {
@@ -32,6 +32,10 @@ export interface Genre {
   tone: number; // master low-pass in Hz
   crackle: number;
   crush: boolean;
+  /** How much echo the melody gets, 0 to 1. Defaults to 0.3. */
+  echo?: number;
+  /** Bass note length in steps. Defaults to 3. */
+  bassLen?: number;
 }
 
 const M7 = [0, 3, 7, 10];
@@ -59,6 +63,48 @@ export const GENRES: Record<GenreId, Genre> = {
     bass: "r..f....r..f....",
     chords: [{ root: 9, tones: M7 }, { root: 2, tones: D7 }, { root: 7, tones: MAJ7 }, { root: 0, tones: MAJ7 }],
     key: 36, leadDensity: 0.4, leadSteps: [0, 3, 6, 8, 10, 12, 14], tone: 7000, crackle: 0.012, crush: false,
+  },
+  boombap: {
+    id: "boombap", name: "Boom Bap", bpm: 90, swing: 0.14,
+    boom: "x.....x.x.......", snap: "....x.......x...", tick: "x.x.x.x.x.x.x.x.",
+    bass: "r.....r.r.....f.",
+    chords: [{ root: 9, tones: M7 }, { root: 9, tones: M7 }, { root: 5, tones: MAJ7 }, { root: 7, tones: D7 }],
+    key: 36, leadDensity: 0.45, leadSteps: [0, 3, 6, 8, 11, 14], tone: 4200, crackle: 0.03, crush: false, echo: 0.2,
+  },
+  house: {
+    id: "house", name: "House", bpm: 122, swing: 0,
+    boom: "x...x...x...x...", snap: "....x.......x...", tick: "..x...x...x...x.",
+    bass: "..r...r...r...o.",
+    chords: [{ root: 9, tones: M7 }, { root: 5, tones: MAJ7 }, { root: 0, tones: MAJ7 }, { root: 7, tones: [0, 4, 7] }],
+    key: 36, leadDensity: 0.6, leadSteps: [0, 2, 4, 6, 8, 10, 12, 14], tone: 9000, crackle: 0, crush: false, echo: 0.35, bassLen: 1.5,
+  },
+  trap: {
+    id: "trap", name: "Trap", bpm: 140, swing: 0,
+    boom: "x......x..x.....", snap: "........x.......", tick: "xxxxxxxxxxxx.x.x",
+    bass: "r.........r.....",
+    chords: [{ root: 9, tones: [0, 3, 7] }, { root: 9, tones: [0, 3, 7] }, { root: 5, tones: [0, 4, 7] }, { root: 4, tones: [0, 4, 7] }],
+    key: 33, leadDensity: 0.35, leadSteps: [0, 3, 6, 8, 11, 14], tone: 11000, crackle: 0, crush: false, echo: 0.4, bassLen: 8,
+  },
+  reggaeton: {
+    id: "reggaeton", name: "Reggaeton", bpm: 96, swing: 0,
+    boom: "x...x...x...x...", snap: "...x..x....x..x.", tick: "x.x.x.x.x.x.x.x.",
+    bass: "r..r..r.r..r..f.",
+    chords: [{ root: 9, tones: [0, 3, 7] }, { root: 5, tones: [0, 4, 7] }, { root: 0, tones: [0, 4, 7] }, { root: 7, tones: [0, 4, 7] }],
+    key: 36, leadDensity: 0.55, leadSteps: [0, 3, 6, 8, 10, 11, 14], tone: 8000, crackle: 0, crush: false, echo: 0.25, bassLen: 2,
+  },
+  funk: {
+    id: "funk", name: "Funk", bpm: 108, swing: 0.06,
+    boom: "x.x....x..x.....", snap: "....x..o....x..o", tick: "xxxxxxxxxxxxxxxx",
+    bass: "r.ro..f.r.o..rf.",
+    chords: [{ root: 4, tones: [0, 4, 7, 10] }, { root: 4, tones: [0, 4, 7, 10] }, { root: 9, tones: M7 }, { root: 11, tones: D7 }],
+    key: 36, leadDensity: 0.5, leadSteps: [0, 2, 3, 6, 8, 10, 11, 14], tone: 7500, crackle: 0, crush: false, echo: 0.15, bassLen: 1.2,
+  },
+  dreamy: {
+    id: "dreamy", name: "Dreamy", bpm: 70, swing: 0.1,
+    boom: "x...............", snap: "........x.......", tick: "....o.......o...",
+    bass: "r.......f.......",
+    chords: [{ root: 0, tones: MAJ7 }, { root: 9, tones: M7 }, { root: 5, tones: MAJ7 }, { root: 7, tones: [0, 2, 7, 10] }],
+    key: 36, leadDensity: 0.35, leadSteps: [0, 4, 6, 8, 12], tone: 3600, crackle: 0.015, crush: false, echo: 0.65, bassLen: 7,
   },
 };
 
@@ -107,7 +153,7 @@ export function makeSong(genreId: GenreId, seed: number): Song {
       const b = g.bass[s];
       if (b !== ".") {
         const off = b === "f" ? 7 : b === "o" ? 12 : 0;
-        events.push({ role: "bass", step, vel: 1, midi: g.key + chord.root + off, len: g.id === "chip" ? 1.6 : 3 });
+        events.push({ role: "bass", step, vel: 1, midi: g.key + chord.root + off, len: g.bassLen ?? (g.id === "chip" ? 1.6 : 3) });
       }
     }
     // Melody: chord tones on strong steps, pentatonic in between, moving in small jumps.
@@ -154,6 +200,9 @@ export class BandEngine {
   private shaper: WaveShaperNode;
   private crackleGain: GainNode;
   private echoIn: GainNode;
+  private delay: DelayNode;
+  private fb: GainNode;
+  private wet: GainNode;
   private buffers = new Map<LearnedSound, AudioBuffer>();
   readonly master: GainNode;
 
@@ -171,9 +220,9 @@ export class BandEngine {
 
     // A soft echo for the melody robot.
     this.echoIn = ctx.createGain();
-    const delay = ctx.createDelay(1);
-    const fb = ctx.createGain();
-    const wet = ctx.createGain();
+    const delay = (this.delay = ctx.createDelay(1));
+    const fb = (this.fb = ctx.createGain());
+    const wet = (this.wet = ctx.createGain());
     delay.delayTime.value = 0.28;
     fb.gain.value = 0.32;
     wet.gain.value = 0.3;
@@ -200,6 +249,11 @@ export class BandEngine {
     const t = this.ctx.currentTime;
     this.tone.frequency.setTargetAtTime(g.tone, t, 0.05);
     this.crackleGain.gain.setTargetAtTime(g.crackle * 4, t, 0.05);
+    // Echo of a dotted eighth note, wetter for dreamy styles.
+    const e = g.echo ?? 0.3;
+    this.delay.delayTime.setTargetAtTime(Math.min(0.95, (60 / g.bpm / 4) * 3), t, 0.05);
+    this.fb.gain.setTargetAtTime(0.2 + e * 0.45, t, 0.05);
+    this.wet.gain.setTargetAtTime(e, t, 0.05);
     if (g.crush) {
       const c = new Float32Array(1024);
       for (let i = 0; i < c.length; i++) c[i] = Math.round(((i / 1023) * 2 - 1) * 7) / 7;
