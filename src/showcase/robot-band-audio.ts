@@ -48,7 +48,7 @@ export const GENRES: Record<GenreId, Genre> = {
     boom: "x......x..x.....", snap: "....x.......x...", tick: "x.o.x.o.x.o.x.oo",
     bass: "r......r..f.....",
     chords: [{ root: 2, tones: M7 }, { root: 7, tones: D7 }, { root: 0, tones: MAJ7 }, { root: 9, tones: M7 }],
-    key: 36, leadDensity: 0.55, leadSteps: [0, 2, 3, 6, 8, 10, 11, 14], tone: 3200, crackle: 0.05, crush: false,
+    key: 36, leadDensity: 0.55, leadSteps: [0, 2, 3, 6, 8, 10, 11, 14], tone: 6500, crackle: 0.03, crush: false,
   },
   chip: {
     id: "chip", name: "Chiptune", bpm: 132, swing: 0,
@@ -62,14 +62,14 @@ export const GENRES: Record<GenreId, Genre> = {
     boom: "x..x....x..x....", snap: "x..x..x...x..x..", tick: "oooooooooooooooo",
     bass: "r..f....r..f....",
     chords: [{ root: 9, tones: M7 }, { root: 2, tones: D7 }, { root: 7, tones: MAJ7 }, { root: 0, tones: MAJ7 }],
-    key: 36, leadDensity: 0.4, leadSteps: [0, 3, 6, 8, 10, 12, 14], tone: 7000, crackle: 0.012, crush: false,
+    key: 36, leadDensity: 0.4, leadSteps: [0, 3, 6, 8, 10, 12, 14], tone: 9000, crackle: 0.008, crush: false,
   },
   boombap: {
     id: "boombap", name: "Boom Bap", bpm: 90, swing: 0.14,
     boom: "x.....x.x.......", snap: "....x.......x...", tick: "x.x.x.x.x.x.x.x.",
     bass: "r.....r.r.....f.",
     chords: [{ root: 9, tones: M7 }, { root: 9, tones: M7 }, { root: 5, tones: MAJ7 }, { root: 7, tones: D7 }],
-    key: 36, leadDensity: 0.45, leadSteps: [0, 3, 6, 8, 11, 14], tone: 4200, crackle: 0.03, crush: false, echo: 0.2,
+    key: 36, leadDensity: 0.45, leadSteps: [0, 3, 6, 8, 11, 14], tone: 8000, crackle: 0.02, crush: false, echo: 0.2,
   },
   house: {
     id: "house", name: "House", bpm: 122, swing: 0,
@@ -104,7 +104,7 @@ export const GENRES: Record<GenreId, Genre> = {
     boom: "x...............", snap: "........x.......", tick: "....o.......o...",
     bass: "r.......f.......",
     chords: [{ root: 0, tones: MAJ7 }, { root: 9, tones: M7 }, { root: 5, tones: MAJ7 }, { root: 7, tones: [0, 2, 7, 10] }],
-    key: 36, leadDensity: 0.35, leadSteps: [0, 4, 6, 8, 12], tone: 3600, crackle: 0.015, crush: false, echo: 0.65, bassLen: 7,
+    key: 36, leadDensity: 0.35, leadSteps: [0, 4, 6, 8, 12], tone: 6000, crackle: 0.01, crush: false, echo: 0.65, bassLen: 7,
   },
 };
 
@@ -184,14 +184,29 @@ export function makeSong(genreId: GenreId, seed: number): Song {
 
 const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
-/** How each robot plays its sound, so even a table tap fits the job. */
-const ROLE_FX: Record<RoleId, { rate: number; type: BiquadFilterType; freq: number; dur: number; gain: number }> = {
-  boom: { rate: 0.7, type: "lowpass", freq: 1100, dur: 0.42, gain: 1.4 },
-  snap: { rate: 1, type: "highpass", freq: 260, dur: 0.3, gain: 0.85 },
-  tick: { rate: 1.5, type: "highpass", freq: 2200, dur: 0.11, gain: 0.55 },
-  bass: { rate: 1, type: "lowpass", freq: 750, dur: 0, gain: 1.1 },
-  melo: { rate: 1, type: "lowpass", freq: 5200, dur: 0, gain: 0.65 },
+/**
+ * How each robot plays its sound. Everything plays at its own speed and keeps its own character:
+ * filters are gentle and drums only shape the start and end of your sound.
+ */
+const ROLE_FX: Record<RoleId, { type: BiquadFilterType; freq: number; maxDur: number; gain: number }> = {
+  boom: { type: "lowshelf", freq: 200, maxDur: 0.6, gain: 1.15 },
+  snap: { type: "highpass", freq: 90, maxDur: 0.45, gain: 0.85 },
+  tick: { type: "highpass", freq: 900, maxDur: 0.18, gain: 0.5 },
+  bass: { type: "highpass", freq: 40, maxDur: 1.2, gain: 0.9 },
+  melo: { type: "highpass", freq: 60, maxDur: 1.2, gain: 0.75 },
 };
+
+/**
+ * Playback rate that moves a sound to a note while changing it as little as possible:
+ * it picks the octave of the note closest to the sound's own pitch, so the shift is never
+ * more than half an octave and a voice still sounds like the same voice.
+ */
+export function gentleRate(midi: number, pitch: number | null) {
+  const own = pitch ?? 261.63;
+  let semis = 12 * Math.log2(mtof(midi) / own);
+  semis = semis - 12 * Math.round(semis / 12); // fold into -6..+6
+  return Math.pow(2, semis / 12);
+}
 
 /** Builds the audio chain on any context (live or offline) and plays steps through it. */
 export class BandEngine {
@@ -216,7 +231,15 @@ export class BandEngine {
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14;
     comp.ratio.value = 4;
-    this.input.connect(this.shaper).connect(this.tone).connect(comp).connect(this.master).connect(dest);
+    // A limiter at the very end keeps loud moments from crackling.
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -4;
+    limiter.knee.value = 2;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.002;
+    limiter.release.value = 0.12;
+    this.input.gain.value = 0.7;
+    this.input.connect(this.shaper).connect(this.tone).connect(comp).connect(this.master).connect(limiter).connect(dest);
 
     // A soft echo for the melody robot.
     this.echoIn = ctx.createGain();
@@ -282,23 +305,26 @@ export class BandEngine {
     const fx = ROLE_FX[role];
     const src = this.ctx.createBufferSource();
     src.buffer = this.bufferFor(sound);
-    let rate = fx.rate;
-    if (midi !== undefined) rate = mtof(midi) / (sound.pitch ?? 261.63);
-    src.playbackRate.value = Math.min(4, Math.max(0.2, rate));
+    const rate = midi !== undefined ? gentleRate(midi, sound.pitch) : 1;
+    src.playbackRate.value = rate;
     const filter = this.ctx.createBiquadFilter();
     filter.type = fx.type;
     filter.frequency.value = fx.freq;
+    if (fx.type === "lowshelf") filter.gain.value = 5;
     const amp = this.ctx.createGain();
-    const dur = fx.dur || Math.max(0.15, stepDur * len * 0.95);
+    const clipDur = sound.data.length / sound.rate / rate;
+    // Drums let your sound ring out naturally; notes hold for their length but never cut a short word.
+    const want = midi !== undefined ? Math.max(stepDur * len, Math.min(clipDur, 0.5)) : clipDur;
+    const dur = Math.max(0.05, Math.min(want, clipDur, fx.maxDur));
     const peak = fx.gain * vel;
     amp.gain.setValueAtTime(0, time);
-    amp.gain.linearRampToValueAtTime(peak, time + 0.004);
-    amp.gain.setValueAtTime(peak, time + dur * 0.7);
-    amp.gain.exponentialRampToValueAtTime(0.0001, time + dur + 0.08);
+    amp.gain.linearRampToValueAtTime(peak, time + 0.003);
+    amp.gain.setValueAtTime(peak, time + dur * 0.8);
+    amp.gain.exponentialRampToValueAtTime(0.0001, time + dur + 0.06);
     src.connect(filter).connect(amp).connect(this.input);
     if (role === "melo") amp.connect(this.echoIn);
     src.start(time);
-    src.stop(time + dur + 0.1);
+    src.stop(time + dur + 0.08);
   }
 
   /** Plays every event on one step. Returns the roles that played, for the robot animations. */
