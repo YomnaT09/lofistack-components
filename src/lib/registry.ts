@@ -12,6 +12,7 @@ import MoodLightingRoom from "@/showcase/mood-lighting-room";
 import LofiRadioTuner from "@/showcase/lofi-radio-tuner";
 import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
 import RobotBand from "@/showcase/robot-band";
+import ThermometerRating from "@/showcase/thermometer-rating";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -773,6 +774,59 @@ export default function Example() {
     <RobotBand
       defaultGenre="bossa"
       onGenerate={(roles) => console.log("melody plays sound", roles.melo)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "thermometer-rating",
+    name: "Thermometer Rating",
+    type: "input",
+    week: 7,
+    description: "A 1 to 5 rating input shaped like a thermometer: drag the mercury up and the colour, the face and the label heat up from Freezing to On fire.",
+    Component: ThermometerRating,
+    previewScale: 0.56,
+    date: "2026-11-17",
+    summary:
+      "A rating input that replaces the usual row of stars with a glass thermometer. Press anywhere on the tube and drag: the mercury follows your finger and its colour slides from icy blue through yellow to hot red. A little face next to it reacts live, from a shivering frown at 1 to a beaming grin at 5, and the label changes from Freezing to On fire. Let go and the mercury springs onto the nearest whole level. At 1 frost sparkles around the bulb, at 5 heat bubbles rise out of it. Press Send rating to submit it and get a thank-you note. It works with the keyboard as a real slider and makes a soft tick on every level.",
+    features: [
+      "Drag or tap anywhere on the thermometer; the mercury follows the pointer, then springs to the nearest of 5 levels",
+      "Colour of the mercury, bulb glow, label and Send button moves smoothly from cold blue to hot red",
+      "SVG face that reacts live: the mouth bends from frown to grin, cheeks blush, it shivers at 1 and bobs happily at 5",
+      "Frost sparkles at level 1 and rising heat bubbles at level 5",
+      "Five custom labels (Freezing, Chilly, Okay, Warm, On fire! by default) and a custom question",
+      "Optional Send rating button with a thank-you note and a Change link",
+      "Soft tick sound on each level and a chime on send, made with Web Audio (can be turned off)",
+      "Accessible slider: role, value text, arrow keys, Home/End and number keys 1 to 5, visible focus",
+      "Touch friendly (pointer capture, no page scroll while dragging), reduced-motion support and a compact phone layout",
+    ],
+    howToUse: [
+      "Press on the thermometer and drag the mercury up or down.",
+      "Watch the face and the label change, then let go to pick that level.",
+      "Or focus it and use the arrow keys, or press 1 to 5.",
+      "Press Send rating. Use Change to rate again.",
+    ],
+    tech: ["React", "TypeScript", "SVG", "Pointer Events", "Web Audio API", "CSS animations"],
+    props: [
+      { name: "question", type: "string", default: '"How did you like this component?"', description: "Text shown above the thermometer." },
+      { name: "labels", type: "[string, string, string, string, string]", default: '["Freezing", "Chilly", "Okay", "Warm", "On fire!"]', description: "Label for each level, coldest first." },
+      { name: "defaultValue", type: "number", default: "4", description: "Rating selected at the start, 1 to 5." },
+      { name: "showSubmit", type: "boolean", default: "true", description: "Show the Send button and the thank-you note." },
+      { name: "submitLabel", type: "string", default: '"Send rating"', description: "Text on the Send button." },
+      { name: "sound", type: "boolean", default: "true", description: "Play a soft tick on every level and a chime on send." },
+      { name: "disabled", type: "boolean", default: "false", description: "Lock the rating." },
+      { name: "onChange", type: "(value: number) => void", default: "undefined", description: "Called when the rating settles on a new level." },
+      { name: "onSubmit", type: "(value: number) => void", default: "undefined", description: "Called when Send is pressed." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import ThermometerRating from "@/showcase/thermometer-rating";
+
+export default function Example() {
+  return (
+    <ThermometerRating
+      question="How was your coffee?"
+      labels={["Ice cold", "Lukewarm", "Fine", "Hot", "Perfect!"]}
+      onSubmit={(value) => console.log("Rated", value)}
     />
   );
 }`,
