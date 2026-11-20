@@ -13,6 +13,7 @@ import LofiRadioTuner from "@/showcase/lofi-radio-tuner";
 import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
 import RobotBand from "@/showcase/robot-band";
 import ThermometerRating from "@/showcase/thermometer-rating";
+import InkBlotMaker from "@/showcase/ink-blot-maker";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -827,6 +828,63 @@ export default function Example() {
       question="How was your coffee?"
       labels={["Ice cold", "Lukewarm", "Fine", "Hot", "Perfect!"]}
       onSubmit={(value) => console.log("Rated", value)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "ink-blot-maker",
+    name: "Ink Blot Maker",
+    type: "section",
+    week: 8,
+    description: "A mini ink studio: paint on one half, fold the paper and get a mirrored Rorschach blot. Blow ink with a straw, tilt it to drip, bring it to life with googly eyes.",
+    Component: InkBlotMaker,
+    previewWidth: 860,
+    previewScale: 0.34,
+    date: "2026-11-20",
+    summary:
+      "A small art studio built around the old Rorschach trick. Paint on one side of the paper with a pen, a soft brush, a rainbow brush, ink drops, spray or splatter, then press Fold: the paper flips over, presses the wet ink onto the other side and opens again with a perfectly mirrored blot, and it guesses what it sees. Fold left and right, top and bottom, or four ways for a kaleidoscope. Turn on Live mirror to paint both sides at once. A straw tool blows the ink into branching veins, Tilt paper makes the wet ink run down in drips, and Bring to life gives the blot googly eyes that follow your pointer, blink and talk. Sign it with a red seal, replay how it was painted as a timelapse, download a PNG, or hang it in a framed gallery that is saved in the browser.",
+    features: [
+      "8 tools: pen, soft brush, rainbow brush, wet ink drop that spreads, straw blow, spray, splatter and eraser",
+      "10 ink colours plus a picker for any colour, size slider and 4 papers (cream, white, kraft, black)",
+      "Fold animation in 3 ways (left/right, top/bottom, four ways) that presses the wet ink across, then guesses what it looks like",
+      "Live mirror paints every stroke on all folded sides at once",
+      "Straw blow: drag away from the ink and it branches out like blown-ink art",
+      "Tilt paper: wet ink runs down in drips with a drop at the end",
+      "Bring to life: googly eyes that follow the pointer, blink, a breathing wobble and speech bubbles",
+      "Red signature seal with initials from the picture name, timelapse replay and Undo",
+      "Framed gallery with name and date, saved in localStorage, click a frame to keep editing; PNG download",
+      "Keyboard shortcuts, touch drawing without page scroll, paper and ink sounds made with Web Audio",
+    ],
+    howToUse: [
+      "Pick a colour and a tool, then paint on one half of the paper.",
+      "Press Fold (or F) to press the ink onto the other half. Try the ↕ and ✚ folds too.",
+      "Use Straw blow: press on the ink and drag outward. Press Tilt paper to make it drip.",
+      "Press Bring to life, then move your pointer around the eyes.",
+      "Type a name, press Sign, then Add to gallery or ⬇ PNG.",
+    ],
+    tech: ["React", "TypeScript", "Canvas 2D", "Pointer Events", "Web Audio API", "localStorage", "CSS 3D transforms"],
+    props: [
+      { name: "colors", type: "string[]", default: "10 ink colours", description: "Ink colours in the palette. A picker for any colour is always added." },
+      { name: "papers", type: "string[]", default: '["#f6efe2", "#ffffff", "#c9a77c", "#17151c"]', description: "Paper colours. The first one is used at the start." },
+      { name: "defaultTool", type: '"pen" | "brush" | "rainbow" | "drop" | "blow" | "spray" | "splat" | "eraser"', default: '"brush"', description: "Tool selected at the start." },
+      { name: "defaultMode", type: '"v" | "h" | "q"', default: '"v"', description: "Fold at the start: left/right, top/bottom or four ways." },
+      { name: "showExample", type: "boolean", default: "true", description: "Start with a folded example blot." },
+      { name: "showGallery", type: "boolean", default: "true", description: "Show the framed gallery under the studio." },
+      { name: "storageKey", type: "string", default: '"ink-blot-gallery"', description: "localStorage key for the gallery. Empty string turns saving off." },
+      { name: "signature", type: "string", default: '"INK"', description: "Initials on the seal when no picture name is typed." },
+      { name: "sound", type: "boolean", default: "true", description: "Paper, ink and squeak sounds." },
+      { name: "onSave", type: "(picture: { name: string; dataUrl: string }) => void", default: "undefined", description: "Called when a picture is added to the gallery, with a full size PNG." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import InkBlotMaker from "@/showcase/ink-blot-maker";
+
+export default function Example() {
+  return (
+    <InkBlotMaker
+      defaultMode="q"
+      signature="Yomna T"
+      onSave={({ name, dataUrl }) => console.log("Saved", name, dataUrl.length)}
     />
   );
 }`,
