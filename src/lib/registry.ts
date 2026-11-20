@@ -14,6 +14,7 @@ import PolaroidSnapCamera from "@/showcase/polaroid-snap-camera";
 import RobotBand from "@/showcase/robot-band";
 import ThermometerRating from "@/showcase/thermometer-rating";
 import InkBlotMaker from "@/showcase/ink-blot-maker";
+import SkillSphere from "@/showcase/skill-sphere";
 
 export type ComponentType_ =
   | "button" | "form" | "card" | "modal" | "navbar"
@@ -839,7 +840,7 @@ export default function Example() {
     week: 8,
     description: "A mini ink studio: paint on one half, fold the paper and get a mirrored Rorschach blot. Blow ink with a straw, tilt it to drip, bring it to life with googly eyes.",
     Component: InkBlotMaker,
-    previewWidth: 860,
+    previewWidth: 820,
     previewScale: 0.34,
     date: "2026-11-20",
     summary:
@@ -885,6 +886,70 @@ export default function Example() {
       defaultMode="q"
       signature="Yomna T"
       onSave={({ name, dataUrl }) => console.log("Saved", name, dataUrl.length)}
+    />
+  );
+}`,
+  },
+  {
+    slug: "skill-sphere",
+    name: "Skill Sphere",
+    type: "section",
+    week: 8,
+    description: "Your skills floating on a 3D globe. Drag to spin, click a skill to bring it to the front with a detail card, filter by category and morph the cloud into a ring, a DNA helix or a heart.",
+    Component: SkillSphere,
+    previewWidth: 820,
+    previewScale: 0.28,
+    date: "2026-11-21",
+    summary:
+      "A portfolio skills section that feels like a toy. Every skill is a coloured tag placed on a 3D sphere that spins slowly and leans toward your pointer. Drag it and it keeps spinning with momentum, then slows down. Click a skill and the globe turns until that skill faces you, then a card slides in with its level bar, experience and related skills, while glowing dashed lines with travelling sparks link it to those related skills. Filter by category or search, and everything that does not match fades into the back. The shape buttons fly every tag into a new formation: a Saturn ring, a DNA helix with rungs, or a heart with a glowing outline, and Scatter blows them apart before they snap back. Visitors can add their own skill with an emoji, a category and a level; it flies out of the centre and is kept in localStorage.",
+    features: [
+      "Real 3D tag cloud: depth based size, fade and blur, sorted so front tags sit on top",
+      "Drag to spin with momentum, gentle auto rotation, tilt toward the pointer, wheel and ＋/－ zoom, pause button",
+      "Click a skill: the sphere rotates it to the front and opens a detail card with an animated level bar, experience and related chips",
+      "Animated links from the selected skill to its related skills, with sparks running along curved lines",
+      "Category filter buttons and live search that fade non matching tags",
+      "Shape morph: Globe, Saturn ring, DNA helix (with rungs) and Heart (with a glowing outline), plus Scatter",
+      "Add your own skill (emoji, name, category, level) that flies in from the centre and is saved in localStorage",
+      "Stats row with skill count, categories, average level and top skill",
+      "Keyboard: arrow keys spin, Tab moves through tags, Enter selects, Esc closes; soft Web Audio pings with a mute button",
+      "Respects prefers-reduced-motion and works with touch (no page scroll while dragging)",
+    ],
+    howToUse: [
+      "Drag the sphere to spin it, or scroll over it to zoom.",
+      "Click a skill to bring it to the front and read its card. Click a related chip to jump.",
+      "Pick a category or type in the search box to highlight skills.",
+      "Try Ring, DNA and Heart, then press Scatter.",
+      "Type a new skill at the bottom and press Add.",
+    ],
+    tech: ["React", "TypeScript", "CSS 3D projection", "Canvas 2D", "Pointer Events", "Web Audio API", "localStorage"],
+    props: [
+      { name: "skills", type: "Skill[]", default: "24 sample skills", description: "Skills as { emoji, name, category, level, experience?, description?, related? }." },
+      { name: "categories", type: "Record<string, string>", default: "Frontend, Design, Tools, Fun", description: "Category name to colour. The order sets the filter buttons." },
+      { name: "title", type: "string", default: '"✨ My Skills"', description: "Heading of the section." },
+      { name: "defaultShape", type: '"sphere" | "ring" | "helix" | "heart"', default: '"sphere"', description: "Shape at the start." },
+      { name: "autoRotate", type: "boolean", default: "true", description: "Spin slowly on its own." },
+      { name: "allowAdd", type: "boolean", default: "true", description: "Show the form for adding a skill." },
+      { name: "storageKey", type: "string", default: '"skill-sphere:v1"', description: "localStorage key for added skills. Empty string turns saving off." },
+      { name: "height", type: "number", default: "480", description: "Height of the 3D stage in px." },
+      { name: "sound", type: "boolean", default: "true", description: "Soft pings made with Web Audio." },
+      { name: "onSelect", type: "(skill: Skill | null) => void", default: "undefined", description: "Called when a skill is selected, or with null when the card closes." },
+      { name: "onAdd", type: "(skill: Skill) => void", default: "undefined", description: "Called when a visitor adds a skill." },
+      { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
+    ],
+    usage: `import SkillSphere from "@/showcase/skill-sphere";
+
+export default function Skills() {
+  return (
+    <SkillSphere
+      title="What I work with"
+      categories={{ Code: "#7fd6c2", Design: "#ff7a90", Life: "#ffb86b" }}
+      skills={[
+        { emoji: "⚛️", name: "React", category: "Code", level: 90, related: ["CSS"] },
+        { emoji: "🎨", name: "CSS", category: "Code", level: 85, related: ["Figma"] },
+        { emoji: "🖌", name: "Figma", category: "Design", level: 80 },
+        { emoji: "☕", name: "Coffee", category: "Life", level: 100 },
+      ]}
+      onSelect={(skill) => console.log(skill?.name)}
     />
   );
 }`,

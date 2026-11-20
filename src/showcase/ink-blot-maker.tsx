@@ -878,7 +878,7 @@ export default function InkBlotMaker({
 
 const CSS = `
 .ibm{--ink:#ece7f6;--mute:#a69dc0;--panel:#18141f;--line:#2f2742;--btn:#2a2238;--btnb:#3d3256;--acc:#ffb86b;--mint:#7fd6c2;
-  width:min(860px,90vw);color:var(--ink);font-family:inherit;display:flex;flex-direction:column;gap:16px;text-align:left}
+  width:min(820px,90vw);color:var(--ink);font-family:inherit;display:flex;flex-direction:column;gap:16px;text-align:left}
 .ibm button{font:inherit;font-weight:700;font-size:13px;background:var(--btn);color:var(--ink);border:1px solid var(--btnb);border-radius:999px;padding:7px 13px;cursor:pointer;line-height:1.2}
 .ibm button:hover{border-color:var(--acc)}
 .ibm button:focus-visible,.ibm input:focus-visible,.ibm canvas:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
