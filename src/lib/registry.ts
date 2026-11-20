@@ -821,7 +821,6 @@ export default function Example() {
       { name: "className", type: "string", default: '""', description: "Extra class on the wrapper." },
     ],
     usage: `import ThermometerRating from "@/showcase/thermometer-rating";
-import InkBlotMaker from "@/showcase/ink-blot-maker";
 
 export default function Example() {
   return (
